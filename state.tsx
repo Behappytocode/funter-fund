@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Deposit, Loan, FinancialSummary, UserRole, DevProfile, UserStatus, LoanStatus } from './types';
+import { User, Deposit, Loan, FinancialSummary, UserRole, DevProfile, UserStatus, LoanStatus, Installment } from './types';
 import { auth, db, googleProvider } from './firebase';
 import { 
   signInWithPopup, 
@@ -52,7 +52,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [devProfile, setDevProfile] = useState<DevProfile>(INITIAL_DEV_PROFILE);
   const [loading, setLoading] = useState(true);
 
-  // Sync Auth State and Current User Profile
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -60,8 +59,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (userDoc.exists()) {
           setCurrentUser(userDoc.data() as User);
         } else {
-          // This case mainly handles Google Login for first-time users
-          // Email signups are handled in signupWithEmail explicitly
           const newUser: User = {
             id: firebaseUser.uid,
             name: firebaseUser.displayName || 'New Member',
@@ -82,7 +79,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => unsub();
   }, []);
 
-  // Sync Data Collections
   useEffect(() => {
     if (!currentUser) return;
 
@@ -185,17 +181,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const issueLoan = async (params: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => {
     const recoverableAmount = params.totalAmount * 0.7;
     const waiverAmount = params.totalAmount * 0.3;
-    const installmentAmount = recoverableAmount / params.durationMonths;
+    const duration = Number(params.durationMonths);
+    const installmentAmount = Math.ceil(recoverableAmount / duration);
     
-    const installments = Array.from({ length: params.durationMonths }).map((_, i) => {
+    const installments: Installment[] = Array.from({ length: duration }).map((_, i) => {
       const date = new Date(params.startDate);
       date.setMonth(date.getMonth() + i + 1);
       return {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substring(2, 9),
         dueDate: date.toISOString().split('T')[0],
         amount: installmentAmount,
         paidAmount: 0,
-        status: 'PENDING' as const
+        status: 'PENDING'
       };
     });
 
@@ -215,7 +212,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updatedInstallments = loan.installments.map(inst => {
       if (inst.id === installmentId && inst.status === 'PENDING') {
-        return { ...inst, status: 'PAID' as const, paidAmount: inst.amount, paidDate: new Date().toISOString().split('T')[0] };
+        return { 
+          ...inst, 
+          status: 'PAID' as const, 
+          paidAmount: inst.amount, 
+          paidDate: new Date().toISOString().split('T')[0] 
+        };
       }
       return inst;
     });

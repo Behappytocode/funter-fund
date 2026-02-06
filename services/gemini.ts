@@ -1,9 +1,15 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { FinancialSummary } from "../types";
 
 export const getFinancialInsight = async (summary: FinancialSummary) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    console.warn("Gemini API Key is missing. Using fallback insights.");
+    return "The fund is maintaining a healthy balance of community support and financial responsibility. Keep up the consistent contributions!";
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const prompt = `
     Analyze the following financial summary for a communal emergency fund called "Funters Fund".
     Current Balance: Rs. ${summary.currentBalance}
@@ -24,6 +30,6 @@ export const getFinancialInsight = async (summary: FinancialSummary) => {
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "The fund is maintaining a healthy balance of community support and financial responsibility. Keep up the consistent contributions!";
+    return "Fund analytics are stable. Your community's commitment to the 70/30 recovery rule ensures long-term sustainability.";
   }
 };
