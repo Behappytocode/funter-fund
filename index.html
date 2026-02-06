@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +13,7 @@
       background-color: #f8fafc;
       margin: 0;
     }
+    /* Hide scrollbars for a cleaner mobile look */
     ::-webkit-scrollbar {
       display: none;
     }
@@ -39,6 +39,7 @@
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <!-- Vite will handle the transpilation of this TSX file -->
+  <script type="module" src="./index.tsx"></script>
 </body>
 </html>
