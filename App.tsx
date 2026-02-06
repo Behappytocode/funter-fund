@@ -1,0 +1,291 @@
+
+import React, { useState } from 'react';
+import { AppProvider, useApp } from './state';
+import { UserRole, UserStatus } from './types';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import Deposits from './components/Deposits';
+import Loans from './components/Loans';
+import Profile from './components/Profile';
+import AdminPanel from './components/AdminPanel';
+import { Fingerprint, Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink } from 'lucide-react';
+
+const AuthScreen: React.FC = () => {
+  const { loginWithGoogle, loginWithEmail, signupWithEmail } = useApp();
+  const [method, setMethod] = useState<'GOOGLE' | 'EMAIL'>('EMAIL');
+  const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>(UserRole.MEMBER);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const isDomainError = error.includes('auth/unauthorized-domain');
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (mode === 'LOGIN') {
+        await loginWithEmail(email, password);
+      } else {
+        await signupWithEmail(email, password, name, role);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Google authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
+           <div className="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto flex items-center justify-center text-white shadow-2xl shadow-indigo-200 mb-6 transform rotate-6">
+             <img src="https://img.icons8.com/ios-filled/100/ffffff/handshake.png" alt="Logo" className="w-12 h-12" />
+           </div>
+           <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none">SKP Fund</h1>
+           <p className="text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-[0.2em]">Friendship that Stands in Crisis</p>
+        </div>
+
+        <div className="bg-white p-8 rounded-[40px] shadow-xl border border-slate-100">
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-8">
+            <button 
+              onClick={() => { setMethod('EMAIL'); setError(''); }}
+              className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${method === 'EMAIL' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+            >
+              EMAIL
+            </button>
+            <button 
+              onClick={() => { setMethod('GOOGLE'); setError(''); }}
+              className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${method === 'GOOGLE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+            >
+              GOOGLE
+            </button>
+          </div>
+
+          {method === 'GOOGLE' ? (
+            <div className="text-center">
+              <h2 className="text-xl font-black text-slate-800">Google Access</h2>
+              <p className="text-xs text-slate-400 font-medium mt-2 mb-8">Quick and secure access via Google.</p>
+              <button 
+                onClick={handleGoogleAuth}
+                disabled={loading}
+                className="w-full bg-white border border-slate-200 text-slate-700 font-black py-4 rounded-[22px] shadow-sm hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                {loading ? 'Connecting...' : 'Sign in with Google'}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <div className="flex gap-2 p-1 bg-slate-50 rounded-xl mb-2">
+                <button 
+                  type="button"
+                  onClick={() => setMode('LOGIN')}
+                  className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'LOGIN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}
+                >
+                  SIGN IN
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMode('SIGNUP')}
+                  className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'SIGNUP' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}
+                >
+                  SIGN UP
+                </button>
+              </div>
+
+              {mode === 'SIGNUP' && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Full Name" 
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 outline-none"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="relative">
+                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <select 
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 outline-none appearance-none"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as UserRole)}
+                    >
+                      <option value={UserRole.MEMBER}>SIGNUP AS MEMBER</option>
+                      <option value={UserRole.ADMIN}>SIGNUP AS ADMIN</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 outline-none"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 outline-none"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-indigo-600 text-white font-black py-4 rounded-[22px] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+              >
+                {loading ? 'Processing...' : mode === 'LOGIN' ? 'Sign In' : 'Sign Up'}
+              </button>
+            </form>
+          )}
+
+          {error && (
+            <div className={`mt-6 p-4 rounded-2xl flex flex-col gap-2 ${isDomainError ? 'bg-amber-50 border border-amber-100' : 'bg-rose-50 border border-rose-100'}`}>
+              <div className="flex items-start gap-2">
+                <AlertCircle className={`shrink-0 mt-0.5 ${isDomainError ? 'text-amber-500' : 'text-rose-500'}`} size={14} />
+                <p className={`text-[9px] font-black uppercase leading-tight ${isDomainError ? 'text-amber-700' : 'text-rose-700'}`}>
+                  {isDomainError ? 'Authorized Domain Required' : 'Authentication Error'}
+                </p>
+              </div>
+              <p className="text-[10px] text-slate-600 font-medium leading-relaxed">
+                {isDomainError 
+                  ? `Your deployment domain "${window.location.hostname}" is not authorized in Firebase. Add it to the list in your Firebase Console to enable login.` 
+                  : error}
+              </p>
+              {isDomainError && (
+                <a 
+                  href="https://console.firebase.google.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[9px] font-black text-indigo-600 uppercase mt-1 hover:underline"
+                >
+                  Firebase Console <ExternalLink size={10} />
+                </a>
+              )}
+            </div>
+          )}
+          
+          <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+              Private communal fund. New accounts require manual approval by the Fund Manager.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PendingApproval: React.FC = () => {
+  const { logout, currentUser } = useApp();
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+       <div className="w-full max-w-sm bg-white p-10 rounded-[40px] shadow-xl text-center">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-6">
+             <Fingerprint size={40} />
+          </div>
+          <h2 className="text-xl font-black text-slate-800">Pending Approval</h2>
+          <p className="text-sm text-slate-400 font-medium mt-4 leading-relaxed">
+            Welcome, <span className="text-slate-800 font-black">{currentUser?.name}</span>! Your account registration is sent to the manager. Please wait for activation.
+          </p>
+          <button 
+            onClick={logout}
+            className="mt-8 text-xs font-black text-indigo-600 uppercase tracking-widest"
+          >
+            Sign out
+          </button>
+       </div>
+    </div>
+  );
+};
+
+const RejectedScreen: React.FC = () => {
+  const { logout } = useApp();
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+       <div className="w-full max-w-sm bg-white p-10 rounded-[40px] shadow-xl text-center">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500 mb-6">
+             <Fingerprint size={40} />
+          </div>
+          <h2 className="text-xl font-black text-slate-800">Access Restricted</h2>
+          <p className="text-sm text-slate-400 font-medium mt-4 leading-relaxed">
+            Your registration request has been rejected. Contact the administrator if you believe this is an error.
+          </p>
+          <button 
+            onClick={logout}
+            className="mt-8 text-xs font-black text-indigo-600 uppercase tracking-widest"
+          >
+            Try Another Account
+          </button>
+       </div>
+    </div>
+  );
+};
+
+const MainApp: React.FC = () => {
+  const { currentUser, loading } = useApp();
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!currentUser) return <AuthScreen />;
+  if (currentUser.status === UserStatus.PENDING) return <PendingApproval />;
+  if (currentUser.status === UserStatus.REJECTED) return <RejectedScreen />;
+
+  return (
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      {activeTab === 'dashboard' && <Dashboard />}
+      {activeTab === 'deposits' && <Deposits />}
+      {activeTab === 'loans' && <Loans />}
+      {activeTab === 'admin' && <AdminPanel />}
+      {activeTab === 'profile' && <Profile />}
+    </Layout>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AppProvider>
+      <MainApp />
+    </AppProvider>
+  );
+};
+
+export default App;

@@ -1,0 +1,7 @@
+{
+  "name": "Funters Fund",
+  "description": "A private communal emergency fund manager with 70/30 recovery rules, financial analytics, and a mobile-first dashboard experience.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
