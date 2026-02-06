@@ -4,18 +4,19 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Specifically define process.env to prevent "ReferenceError: process is not defined"
+    // This safely shims process.env for the browser
     'process.env': {
-      API_KEY: JSON.stringify(process.env.API_KEY || "")
+      API_KEY: JSON.stringify(process.env.API_KEY || ""),
+      NODE_ENV: JSON.stringify(process.env.NODE_ENV || "development")
     }
   },
   server: {
-    port: 3000
+    port: 3000,
+    host: true
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Ensure the build target is compatible with modern browsers
     target: 'esnext'
   }
 });

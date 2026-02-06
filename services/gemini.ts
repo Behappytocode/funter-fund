@@ -2,7 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { FinancialSummary } from "../types";
 
 export const getFinancialInsight = async (summary: FinancialSummary) => {
-  const apiKey = process.env.API_KEY;
+  // Use a safe check for process.env
+  const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : null;
   
   if (!apiKey) {
     console.warn("Gemini API Key is missing. Using fallback insights.");
