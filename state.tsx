@@ -117,9 +117,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
     });
 
-    const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (doc) => {
-      if (doc.exists()) {
-        setDevProfile(doc.data() as DevProfile);
+    const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {
+      if (docSnap.exists()) {
+        setDevProfile(docSnap.data() as DevProfile);
       }
     });
 
