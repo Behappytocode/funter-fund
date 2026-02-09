@@ -58,7 +58,7 @@ const AuthScreen: React.FC = () => {
            <div className="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto flex items-center justify-center text-white shadow-2xl shadow-indigo-200 dark:shadow-none mb-6 transform rotate-6">
              <img src="https://img.icons8.com/ios-filled/100/ffffff/handshake.png" alt="Logo" className="w-12 h-12" />
            </div>
-           <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-none transition-colors">SKP Fund</h1>
+           <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-none transition-colors">Funter Fund</h1>
            <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold mt-2 uppercase tracking-[0.2em]">Friendship that Stands in Crisis</p>
         </div>
 

@@ -33,7 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
              <img src="https://img.icons8.com/ios-filled/50/ffffff/handshake.png" alt="Logo" className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-black text-slate-800 dark:text-slate-100 text-sm tracking-tight leading-none uppercase">SKP Fund Management</h1>
+            <h1 className="font-black text-slate-800 dark:text-slate-100 text-sm tracking-tight leading-none uppercase">Funter Fund Management</h1>
             <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase mt-0.5">Friendship that Stands in Crisis</p>
           </div>
         </div>
