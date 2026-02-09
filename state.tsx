@@ -22,6 +22,8 @@ import {
 } from 'firebase/firestore';
 import { INITIAL_DEV_PROFILE } from './mockData';
 
+type Theme = 'light' | 'dark';
+
 interface AppState {
   currentUser: User | null;
   users: User[];
@@ -30,6 +32,8 @@ interface AppState {
   devProfile: DevProfile;
   summary: FinancialSummary;
   loading: boolean;
+  theme: Theme;
+  toggleTheme: () => void;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signupWithEmail: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
@@ -50,6 +54,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [devProfile, setDevProfile] = useState<DevProfile>(INITIAL_DEV_PROFILE);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved as Theme) || 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -83,7 +105,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const usersList = snap.docs.map(d => d.data() as User);
       setUsers(usersList);
-      // Keep currentUser sync
       const updatedSelf = usersList.find(u => u.id === currentUser.id);
       if (updatedSelf) setCurrentUser(updatedSelf);
     });
@@ -246,7 +267,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      currentUser, users, deposits, loans, devProfile, summary, loading,
+      currentUser, users, deposits, loans, devProfile, summary, loading, theme, toggleTheme,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
       addDeposit, issueLoan, payInstallment, updateUser, updateDevProfile
     }}>

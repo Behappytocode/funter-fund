@@ -27,11 +27,11 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="mb-2">
-        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Portfolio Status</h2>
-        <p className="text-xs text-slate-400 font-medium">Automated fund tracking & audit overview.</p>
+        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Portfolio Status</h2>
+        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Automated fund tracking & audit overview.</p>
       </div>
 
-      <div className="bg-[#1e1b4b] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+      <div className="bg-[#1e1b4b] dark:bg-indigo-950 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -54,19 +54,19 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {stats.map((s, idx) => (
-          <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
-            <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-white mb-3 shadow-lg shadow-slate-100`}>
+          <div key={idx} className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center transition-colors">
+            <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center text-white mb-3 shadow-lg shadow-indigo-100 dark:shadow-none`}>
               <s.icon size={18} />
             </div>
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.label}</span>
-            <div className="text-sm font-black text-slate-800">
+            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{s.label}</span>
+            <div className="text-sm font-black text-slate-800 dark:text-slate-100">
               Rs. {s.value.toLocaleString()}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-[#1e1b4b] rounded-2xl p-5 flex items-center justify-between shadow-lg">
+      <div className="bg-[#1e1b4b] dark:bg-indigo-950 rounded-2xl p-5 flex items-center justify-between shadow-lg">
         <div>
           <h3 className="text-xs font-black text-white">Waiver Audit Summary</h3>
           <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Total non-recoverable portion (30% Rule)</p>
@@ -84,10 +84,10 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
           <div className="flex items-center gap-2 mb-6">
-            <Users size={16} className="text-indigo-600" />
-            <h3 className="text-sm font-black text-slate-800">Portfolio Mix</h3>
+            <Users size={16} className="text-indigo-600 dark:text-indigo-400" />
+            <h3 className="text-sm font-black text-slate-800 dark:text-slate-200">Portfolio Mix</h3>
           </div>
           <div className="h-40 w-full opacity-60">
              <ResponsiveContainer width="100%" height="100%">
@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
                   >
                     <Cell fill="#6366f1" />
                     <Cell fill="#f59e0b" />
-                    <Cell fill="#e2e8f0" />
+                    <Cell fill="#94a3b8" />
                   </Pie>
                   <Tooltip />
                </PieChart>
