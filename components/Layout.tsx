@@ -33,39 +33,46 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
              <img src="https://img.icons8.com/ios-filled/50/ffffff/handshake.png" alt="Logo" className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-black text-slate-800 dark:text-slate-100 text-sm tracking-tight leading-none uppercase">Funter Fund Management</h1>
-            <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase mt-0.5">Friendship that Stands in Crisis</p>
+            <h1 className="font-black text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs tracking-tight leading-none uppercase">Funter Fund Management</h1>
+            <p className="text-[8px] sm:text-[9px] text-indigo-600 dark:text-indigo-400 font-bold tracking-widest uppercase mt-0.5 whitespace-nowrap">Friendship that Stands in Crisis</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <button 
-            onClick={toggleTheme}
-            className="p-2 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-xl"
-            title="Toggle Theme"
-          >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
+        
+        <div className="flex items-center gap-2">
           {currentUser && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-right hidden xs:block">
+                <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase leading-none truncate max-w-[80px]">{currentUser.name}</p>
+                <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-0.5 tracking-tighter">{currentUser.role}</p>
+              </div>
               <button 
                 onClick={() => setActiveTab('profile')}
-                className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-110 transition-transform"
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-105 transition-transform shadow-sm"
               >
                 {currentUser.avatar ? (
                   <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-[10px] font-black text-indigo-600">{currentUser.name.charAt(0)}</span>
+                  <span className="text-xs font-black text-indigo-600 uppercase">{currentUser.name.charAt(0)}</span>
                 )}
               </button>
               <button 
-                onClick={() => logout()}
-                className="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 transition-colors"
+                onClick={() => {
+                  if(confirm("Are you sure you want to log out?")) logout();
+                }}
+                className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 transition-colors"
                 title="Logout"
               >
-                <LogOut size={18} />
+                <LogOut size={16} />
               </button>
             </div>
           )}
+          <button 
+            onClick={toggleTheme}
+            className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-xl"
+            title="Toggle Theme"
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
         </div>
       </header>
 
