@@ -38,7 +38,7 @@ interface AppState {
   issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
   updateUser: (uid: string, data: Partial<User>) => Promise<void>;
-  updateDevProfile: (data: Partial<DevProfile>) => void;
+  updateDevProfile: (data: Partial<DevProfile>) => Promise<void>;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -81,9 +81,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentUser) return;
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-      setUsers(snap.docs.map(d => d.data() as User));
-      // Keep currentUser sync if it exists in the list
-      const updatedSelf = snap.docs.find(d => d.id === currentUser.id)?.data() as User;
+      const usersList = snap.docs.map(d => d.data() as User);
+      setUsers(usersList);
+      // Keep currentUser sync
+      const updatedSelf = usersList.find(u => u.id === currentUser.id);
       if (updatedSelf) setCurrentUser(updatedSelf);
     });
 
@@ -95,10 +96,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
     });
 
+    const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (doc) => {
+      if (doc.exists()) {
+        setDevProfile(doc.data() as DevProfile);
+      }
+    });
+
     return () => {
       unsubUsers();
       unsubDeposits();
       unsubLoans();
+      unsubDev();
     };
   }, [currentUser?.id]);
 
@@ -231,8 +239,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateDoc(userRef, data);
   };
 
-  const updateDevProfile = (data: Partial<DevProfile>) => {
-    setDevProfile(prev => ({ ...prev, ...data }));
+  const updateDevProfile = async (data: Partial<DevProfile>) => {
+    const devRef = doc(db, 'settings', 'devProfile');
+    await setDoc(devRef, { ...devProfile, ...data }, { merge: true });
   };
 
   return (
