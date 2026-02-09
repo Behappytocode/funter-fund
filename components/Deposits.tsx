@@ -1,16 +1,13 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
-// Fix: Added missing Landmark import from lucide-react
-import { Plus, Search, Calendar, FileText, Camera, Eye, Landmark } from 'lucide-react';
+import { Plus, Search, Camera, Eye, Landmark } from 'lucide-react';
 
 const Deposits: React.FC = () => {
   const { deposits, currentUser, users, addDeposit } = useApp();
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Form State
   const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -63,7 +60,6 @@ const Deposits: React.FC = () => {
         )}
       </div>
 
-      {/* Search Bar */}
       <div className="relative group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={18} />
         <input 
@@ -75,7 +71,6 @@ const Deposits: React.FC = () => {
         />
       </div>
 
-      {/* Records Header */}
       <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
         <div className="bg-slate-50 px-6 py-3 border-b border-slate-100 grid grid-cols-4 gap-4">
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest col-span-2">Member & Details</span>
@@ -83,7 +78,6 @@ const Deposits: React.FC = () => {
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</span>
         </div>
 
-        {/* List */}
         <div className="divide-y divide-slate-50">
           {filteredDeposits.map((d) => (
             <div key={d.id} className="px-6 py-5 grid grid-cols-4 gap-4 items-center group hover:bg-slate-50 transition-colors">
@@ -119,7 +113,6 @@ const Deposits: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Modal Content remains same as previous but styled better */}
       {isAdding && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom duration-300">
@@ -138,7 +131,7 @@ const Deposits: React.FC = () => {
                   onChange={(e) => setMemberId(e.target.value)}
                 >
                   <option value="">CHOOSE A MEMBER</option>
-                  {users.filter(u => u.status === 'APPROVED').map(u => (
+                  {users.map(u => (
                     <option key={u.id} value={u.id}>{u.name.toUpperCase()}</option>
                   ))}
                 </select>

@@ -1,9 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../state';
 import { getFinancialInsight } from '../services/gemini';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { TrendingUp, TrendingDown, Sparkles, Wallet, Landmark, Users, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { TrendingUp, TrendingDown, Sparkles, Wallet, Landmark, Users } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { summary, users } = useApp();
@@ -27,13 +26,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Page Title */}
       <div className="mb-2">
         <h2 className="text-2xl font-black text-slate-800 tracking-tight">Portfolio Status</h2>
         <p className="text-xs text-slate-400 font-medium">Automated fund tracking & audit overview.</p>
       </div>
 
-      {/* AI Auditor Section */}
       <div className="bg-[#1e1b4b] rounded-3xl p-6 shadow-xl relative overflow-hidden group">
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -55,7 +52,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats Grid - 4 Horizontal Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {stats.map((s, idx) => (
           <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center">
@@ -70,7 +66,6 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Waiver Audit Summary Bar */}
       <div className="bg-[#1e1b4b] rounded-2xl p-5 flex items-center justify-between shadow-lg">
         <div>
           <h3 className="text-xs font-black text-white">Waiver Audit Summary</h3>
@@ -79,7 +74,7 @@ const Dashboard: React.FC = () => {
         <div className="flex gap-6 items-center">
           <div className="text-center border-r border-white/10 pr-6">
             <p className="text-[8px] text-slate-500 font-black uppercase mb-1">Total Members</p>
-            <p className="text-lg font-black text-white">{users.filter(u => u.status === 'APPROVED').length}</p>
+            <p className="text-lg font-black text-white">{users.length}</p>
           </div>
           <div className="text-center">
             <p className="text-[8px] text-amber-500 font-black uppercase mb-1">Waiver Total</p>
@@ -92,17 +87,6 @@ const Dashboard: React.FC = () => {
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-2 mb-6">
             <Users size={16} className="text-indigo-600" />
-            <h3 className="text-sm font-black text-slate-800">Member Contributions</h3>
-          </div>
-          <div className="text-center py-10 opacity-30">
-            <Landmark size={40} className="mx-auto text-slate-200 mb-2" />
-            <p className="text-[10px] font-bold uppercase tracking-widest">Growth metrics appearing soon</p>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-          <div className="flex items-center gap-2 mb-6">
-            <Sparkles size={16} className="text-amber-500" />
             <h3 className="text-sm font-black text-slate-800">Portfolio Mix</h3>
           </div>
           <div className="h-40 w-full opacity-60">

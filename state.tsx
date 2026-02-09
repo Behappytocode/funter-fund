@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Deposit, Loan, FinancialSummary, UserRole, DevProfile, UserStatus, LoanStatus, Installment } from './types';
+import { User, Deposit, Loan, FinancialSummary, UserRole, DevProfile, LoanStatus, Installment } from './types';
 import { auth, db, googleProvider } from './firebase';
 import { 
   signInWithPopup, 
@@ -62,7 +61,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: firebaseUser.displayName || 'New Member',
             email: firebaseUser.email || '',
             role: UserRole.MEMBER,
-            status: UserStatus.APPROVED, // Auto-approve
             avatar: firebaseUser.photoURL || '',
             joinedAt: new Date().toISOString().split('T')[0]
           };
@@ -147,7 +145,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         name,
         email,
         role,
-        status: UserStatus.APPROVED, // Auto-approve
         joinedAt: new Date().toISOString().split('T')[0]
       };
       

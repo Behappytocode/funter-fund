@@ -1,16 +1,18 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { FinancialSummary } from "../types";
 
 export const getFinancialInsight = async (summary: FinancialSummary) => {
-  // Use a safe check for process.env
-  const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : null;
+  // Fix: Obtaining API key directly from environment variable.
+  const apiKey = process.env.API_KEY;
   
   if (!apiKey) {
     console.warn("Gemini API Key is missing. Using fallback insights.");
     return "The fund is maintaining a healthy balance of community support and financial responsibility. Keep up the consistent contributions!";
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Fix: Initializing GoogleGenAI with process.env.API_KEY directly as a named parameter.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
     Analyze the following financial summary for a communal emergency fund called "Funters Fund".
     Current Balance: Rs. ${summary.currentBalance}
@@ -24,10 +26,12 @@ export const getFinancialInsight = async (summary: FinancialSummary) => {
   `;
 
   try {
+    // Fix: Using ai.models.generateContent with model name and prompt directly.
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
     });
+    // Fix: Accessing the .text property (not a method) from the GenerateContentResponse.
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);

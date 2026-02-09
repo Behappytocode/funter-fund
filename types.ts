@@ -1,13 +1,6 @@
-
 export enum UserRole {
   ADMIN = 'ADMIN',
   MEMBER = 'MEMBER'
-}
-
-export enum UserStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED'
 }
 
 export interface User {
@@ -15,7 +8,6 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  status: UserStatus;
   avatar?: string;
   joinedAt: string;
   contact?: string;

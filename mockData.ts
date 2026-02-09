@@ -1,13 +1,13 @@
 
-import { User, UserRole, UserStatus, Deposit, Loan, LoanStatus, DevProfile } from './types';
+import { User, UserRole, Deposit, Loan, LoanStatus, DevProfile } from './types';
 
+// Fix: Removed 'status' property and 'UserStatus' import as they are not defined in User interface or types.ts
 export const SEED_USERS: User[] = [
   {
     id: 'u1',
     name: 'Admin Manager',
     email: 'admin@funters.com',
     role: UserRole.ADMIN,
-    status: UserStatus.APPROVED,
     avatar: 'https://picsum.photos/seed/admin/200',
     joinedAt: '2023-01-01',
     contact: '+92 300 1234567'
@@ -17,7 +17,6 @@ export const SEED_USERS: User[] = [
     name: 'Ahmed Khan',
     email: 'ahmed@funters.com',
     role: UserRole.MEMBER,
-    status: UserStatus.APPROVED,
     avatar: 'https://picsum.photos/seed/member1/200',
     joinedAt: '2023-02-15',
     contact: '+92 321 7654321'
@@ -27,7 +26,6 @@ export const SEED_USERS: User[] = [
     name: 'Sara Ali',
     email: 'sara@funters.com',
     role: UserRole.MEMBER,
-    status: UserStatus.PENDING,
     avatar: 'https://picsum.photos/seed/member2/200',
     joinedAt: '2024-05-10'
   }
