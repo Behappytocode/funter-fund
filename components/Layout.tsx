@@ -11,8 +11,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
-  const { currentUser, users } = useApp();
-  const pendingCount = users.filter(u => u.status === 'PENDING').length;
+  const { currentUser } = useApp();
 
   const navItems = [
     { id: 'dashboard', icon: Home, label: 'HOME' },
@@ -21,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
   ];
 
   if (currentUser?.role === UserRole.ADMIN) {
-    navItems.push({ id: 'admin', icon: Inbox, label: 'INBOX' });
+    navItems.push({ id: 'admin', icon: Inbox, label: 'CONSOLE' });
   }
   
   navItems.push({ id: 'profile', icon: Code, label: 'DEV' });
@@ -71,11 +70,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           >
             <item.icon size={20} className={activeTab === item.id ? 'scale-110' : ''} />
             <span className={`text-[8px] font-black tracking-widest ${activeTab === item.id ? 'opacity-100' : 'opacity-80'}`}>{item.label}</span>
-            {item.id === 'admin' && pendingCount > 0 && (
-              <span className="absolute -top-1 right-1 bg-red-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-black">
-                {pendingCount}
-              </span>
-            )}
           </button>
         ))}
       </nav>

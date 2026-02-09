@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './state';
-import { UserRole, UserStatus } from './types';
+import { UserRole } from './types';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Deposits from './components/Deposits';
 import Loans from './components/Loans';
 import Profile from './components/Profile';
 import AdminPanel from './components/AdminPanel';
-import { Fingerprint, Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
   const { loginWithGoogle, loginWithEmail, signupWithEmail } = useApp();
@@ -200,57 +200,11 @@ const AuthScreen: React.FC = () => {
           
           <div className="mt-8 pt-6 border-t border-slate-50 text-center">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-              Private communal fund. New accounts require manual approval by the Fund Manager.
+              Private communal fund. Instant access granted to authorized members.
             </p>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const PendingApproval: React.FC = () => {
-  const { logout, currentUser } = useApp();
-  return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-       <div className="w-full max-w-sm bg-white p-10 rounded-[40px] shadow-xl text-center">
-          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-6">
-             <Fingerprint size={40} />
-          </div>
-          <h2 className="text-xl font-black text-slate-800">Pending Approval</h2>
-          <p className="text-sm text-slate-400 font-medium mt-4 leading-relaxed">
-            Welcome, <span className="text-slate-800 font-black">{currentUser?.name}</span>! Your account registration is sent to the manager. Please wait for activation.
-          </p>
-          <button 
-            onClick={logout}
-            className="mt-8 text-xs font-black text-indigo-600 uppercase tracking-widest"
-          >
-            Sign out
-          </button>
-       </div>
-    </div>
-  );
-};
-
-const RejectedScreen: React.FC = () => {
-  const { logout } = useApp();
-  return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-       <div className="w-full max-w-sm bg-white p-10 rounded-[40px] shadow-xl text-center">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500 mb-6">
-             <Fingerprint size={40} />
-          </div>
-          <h2 className="text-xl font-black text-slate-800">Access Restricted</h2>
-          <p className="text-sm text-slate-400 font-medium mt-4 leading-relaxed">
-            Your registration request has been rejected. Contact the administrator if you believe this is an error.
-          </p>
-          <button 
-            onClick={logout}
-            className="mt-8 text-xs font-black text-indigo-600 uppercase tracking-widest"
-          >
-            Try Another Account
-          </button>
-       </div>
     </div>
   );
 };
@@ -266,8 +220,6 @@ const MainApp: React.FC = () => {
   );
 
   if (!currentUser) return <AuthScreen />;
-  if (currentUser.status === UserStatus.PENDING) return <PendingApproval />;
-  if (currentUser.status === UserStatus.REJECTED) return <RejectedScreen />;
 
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>

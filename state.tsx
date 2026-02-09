@@ -35,8 +35,6 @@ interface AppState {
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signupWithEmail: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
-  approveUser: (userId: string) => Promise<void>;
-  rejectUser: (userId: string) => Promise<void>;
   addDeposit: (deposit: Omit<Deposit, 'id' | 'entryDate'>) => Promise<void>;
   issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
@@ -64,7 +62,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: firebaseUser.displayName || 'New Member',
             email: firebaseUser.email || '',
             role: UserRole.MEMBER,
-            status: UserStatus.PENDING,
+            status: UserStatus.APPROVED, // Auto-approve
             avatar: firebaseUser.photoURL || '',
             joinedAt: new Date().toISOString().split('T')[0]
           };
@@ -149,7 +147,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         name,
         email,
         role,
-        status: UserStatus.PENDING,
+        status: UserStatus.APPROVED, // Auto-approve
         joinedAt: new Date().toISOString().split('T')[0]
       };
       
@@ -162,14 +160,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => signOut(auth);
-
-  const approveUser = async (userId: string) => {
-    await updateDoc(doc(db, 'users', userId), { status: UserStatus.APPROVED });
-  };
-
-  const rejectUser = async (userId: string) => {
-    await updateDoc(doc(db, 'users', userId), { status: UserStatus.REJECTED });
-  };
 
   const addDeposit = async (deposit: Omit<Deposit, 'id' | 'entryDate'>) => {
     await addDoc(collection(db, 'deposits'), {
@@ -236,7 +226,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{
       currentUser, users, deposits, loans, devProfile, summary, loading,
-      loginWithGoogle, loginWithEmail, signupWithEmail, logout, approveUser, rejectUser,
+      loginWithGoogle, loginWithEmail, signupWithEmail, logout,
       addDeposit, issueLoan, payInstallment
     }}>
       {children}
