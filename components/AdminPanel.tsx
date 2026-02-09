@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera } from 'lucide-react';
@@ -206,11 +205,10 @@ const AdminPanel: React.FC = () => {
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors">
                   <h4 className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Real-time DB: Firestore</h4>
-                  <p className="text-[9px] text-slate-400 font-mono tracking-tight leading-relaxed">
-                    {/* Fix: Wrap schema fields in strings to avoid JSX parsing them as missing variables */}
-                    Collection: users -> {'{id, name, email, role, avatar}'}<br/>
-                    Collection: loans -> {'{id, amount, installments, status}'}
-                  </p>
+                  <div className="text-[9px] text-slate-400 font-mono tracking-tight leading-relaxed">
+                    Collection: users &rarr; {'{id, name, email, role, avatar}'}<br/>
+                    Collection: loans &rarr; {'{id, amount, installments, status}'}
+                  </div>
                 </div>
               </div>
             </div>
