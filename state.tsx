@@ -37,6 +37,8 @@ interface AppState {
   addDeposit: (deposit: Omit<Deposit, 'id' | 'entryDate'>) => Promise<void>;
   issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
+  updateUser: (uid: string, data: Partial<User>) => Promise<void>;
+  updateDevProfile: (data: Partial<DevProfile>) => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -61,7 +63,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: firebaseUser.displayName || 'New Member',
             email: firebaseUser.email || '',
             role: UserRole.MEMBER,
-            avatar: firebaseUser.photoURL || '',
+            avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
             joinedAt: new Date().toISOString().split('T')[0]
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
@@ -80,6 +82,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       setUsers(snap.docs.map(d => d.data() as User));
+      // Keep currentUser sync if it exists in the list
+      const updatedSelf = snap.docs.find(d => d.id === currentUser.id)?.data() as User;
+      if (updatedSelf) setCurrentUser(updatedSelf);
     });
 
     const unsubDeposits = onSnapshot(query(collection(db, 'deposits'), orderBy('paymentDate', 'desc')), (snap) => {
@@ -95,7 +100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubDeposits();
       unsubLoans();
     };
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   const summary: FinancialSummary = (() => {
     const totalDeposits = deposits.reduce((sum, d) => sum + d.amount, 0);
@@ -145,6 +150,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         name,
         email,
         role,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
         joinedAt: new Date().toISOString().split('T')[0]
       };
       
@@ -220,11 +226,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const updateUser = async (uid: string, data: Partial<User>) => {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, data);
+  };
+
+  const updateDevProfile = (data: Partial<DevProfile>) => {
+    setDevProfile(prev => ({ ...prev, ...data }));
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser, users, deposits, loans, devProfile, summary, loading,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
-      addDeposit, issueLoan, payInstallment
+      addDeposit, issueLoan, payInstallment, updateUser, updateDevProfile
     }}>
       {children}
     </AppContext.Provider>

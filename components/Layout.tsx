@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Home, Landmark, Wallet, User as UserIcon, ShieldAlert, Inbox, Code } from 'lucide-react';
+import { Home, Landmark, Wallet, User as UserIcon, ShieldAlert, Inbox, Code, LogOut } from 'lucide-react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
 
@@ -11,7 +10,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
-  const { currentUser } = useApp();
+  const { currentUser, logout } = useApp();
 
   const navItems = [
     { id: 'dashboard', icon: Home, label: 'HOME' },
@@ -40,14 +39,28 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
         </div>
         <div className="flex items-center gap-2">
           {currentUser && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="text-right hidden sm:block">
                 <p className="text-[10px] font-black text-slate-800 leading-none">{currentUser.name}</p>
                 <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">{currentUser.role}</p>
               </div>
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-black text-indigo-600 border border-slate-200">
-                {currentUser.name.charAt(0)}
-              </div>
+              <button 
+                onClick={() => setActiveTab('profile')}
+                className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 hover:scale-110 transition-transform"
+              >
+                {currentUser.avatar ? (
+                  <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-black text-indigo-600">{currentUser.name.charAt(0)}</span>
+                )}
+              </button>
+              <button 
+                onClick={() => logout()}
+                className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           )}
         </div>
