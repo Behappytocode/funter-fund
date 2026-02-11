@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
-import { Plus, Search, Camera, Eye, Landmark, Trash2 } from 'lucide-react';
+import { Plus, Search, Camera, Eye, Landmark, Trash2, FileText } from 'lucide-react';
 
 const Deposits: React.FC = () => {
   const { deposits, currentUser, users, addDeposit, deleteDeposit } = useApp();
@@ -102,6 +102,9 @@ const Deposits: React.FC = () => {
                     <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
                     <span className="text-[9px] font-black text-emerald-500 dark:text-emerald-400 uppercase">Verified</span>
                   </div>
+                  {d.notes && (
+                    <p className="text-[8px] text-slate-400 dark:text-slate-500 italic mt-1 truncate">{d.notes}</p>
+                  )}
                 </div>
               </div>
               <div className="text-center">
@@ -174,6 +177,18 @@ const Deposits: React.FC = () => {
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Entry Description</label>
+                <div className="relative">
+                  <FileText className="absolute left-4 top-4 text-slate-300 dark:text-slate-600" size={16} />
+                  <textarea 
+                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors h-24 resize-none"
+                    placeholder="e.g. Monthly contribution for Feb 2024"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
               </div>
