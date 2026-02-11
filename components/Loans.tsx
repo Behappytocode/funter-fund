@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../state';
 import { UserRole, LoanStatus } from '../types';
-// Added Sparkles to the imported icons from lucide-react
 import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle, Trash2, CheckCircle, Sparkles } from 'lucide-react';
 
 const Loans: React.FC = () => {
@@ -250,12 +248,6 @@ const Loans: React.FC = () => {
             <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">No {activeTab.toLowerCase()} records.</p>
           </div>
         )}
-        {filteredLoans.length === 0 && activeTab === 'REQUESTS' && currentUser?.role === UserRole.MEMBER && (
-           <div className="text-center py-12 px-8 bg-indigo-50 dark:bg-indigo-950/20 rounded-[40px] border border-indigo-100 dark:border-indigo-900/30 flex flex-col items-center">
-              <Sparkles size={24} className="text-indigo-400 mb-3" />
-              <p className="text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest leading-relaxed">You have no active loan requests. Need help? Use the "Request Loan" button above.</p>
-           </div>
-        )}
       </div>
 
       {/* New Loan Modal */}
@@ -297,8 +289,8 @@ const Loans: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white dark:border-slate-600">
-                    <img src={currentUser?.avatar} className="w-full h-full object-cover" />
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-lg">
+                    {currentUser?.avatar || '👤'}
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{currentUser?.name}</p>
@@ -384,21 +376,6 @@ const Loans: React.FC = () => {
                   </div>
                   <button onClick={() => setSelectedLoan(null)} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">✕</button>
                 </div>
-                
-                <div className="grid grid-cols-3 gap-3 mt-8">
-                  <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-3xl text-center border border-indigo-100 dark:border-indigo-900/50">
-                    <p className="text-[8px] font-black text-indigo-300 uppercase mb-1">Total</p>
-                    <p className="text-xs font-black text-indigo-700 dark:text-indigo-400">Rs. {activeLoanData.totalAmount.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-3xl text-center border border-emerald-100 dark:border-emerald-900/50">
-                    <p className="text-[8px] font-black text-emerald-300 uppercase mb-1">Waiver</p>
-                    <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">Rs. {activeLoanData.waiverAmount.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-3xl text-center border border-amber-100 dark:border-amber-900/50">
-                    <p className="text-[8px] font-black text-amber-300 uppercase mb-1">Recover</p>
-                    <p className="text-xs font-black text-amber-700 dark:text-amber-400">Rs. {activeLoanData.recoverableAmount.toLocaleString()}</p>
-                  </div>
-                </div>
              </div>
 
              <div className="p-8 pb-24 space-y-6">
@@ -421,34 +398,6 @@ const Loans: React.FC = () => {
                         <p className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">Rs. {inst.amount.toLocaleString()}</p>
                         <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">DUE: {inst.dueDate}</p>
                       </div>
-                      {inst.status === 'PAID' ? (
-                        <div className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 rounded-full">
-                          <CheckCircle2 size={10} /> Paid
-                        </div>
-                      ) : (
-                        currentUser?.role === UserRole.ADMIN && activeLoanData.status === LoanStatus.ACTIVE ? (
-                          <button 
-                            disabled={isSubmitting}
-                            onClick={async () => {
-                              setIsSubmitting(true);
-                              try {
-                                await payInstallment(activeLoanData.id, inst.id);
-                              } catch(e) {
-                                alert("Failed to mark as paid");
-                              } finally {
-                                setIsSubmitting(false);
-                              }
-                            }}
-                            className="text-[9px] font-black bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 transition-all uppercase tracking-widest disabled:opacity-50"
-                          >
-                            Mark Paid
-                          </button>
-                        ) : (
-                          <div className="text-[9px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full">
-                            <Clock size={10} /> {activeLoanData.status === LoanStatus.PENDING ? 'Projected' : 'Pending'}
-                          </div>
-                        )
-                      )}
                     </div>
                   </div>
                 ))}

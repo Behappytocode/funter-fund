@@ -1,14 +1,12 @@
-
 import { User, UserRole, Deposit, Loan, LoanStatus, DevProfile } from './types';
 
-// Fix: Removed 'status' property and 'UserStatus' import as they are not defined in User interface or types.ts
 export const SEED_USERS: User[] = [
   {
     id: 'u1',
     name: 'Admin Manager',
     email: 'admin@funters.com',
     role: UserRole.ADMIN,
-    avatar: 'https://picsum.photos/seed/admin/200',
+    avatar: '👑',
     joinedAt: '2023-01-01',
     contact: '+92 300 1234567'
   },
@@ -17,7 +15,7 @@ export const SEED_USERS: User[] = [
     name: 'Ahmed Khan',
     email: 'ahmed@funters.com',
     role: UserRole.MEMBER,
-    avatar: 'https://picsum.photos/seed/member1/200',
+    avatar: '🧔',
     joinedAt: '2023-02-15',
     contact: '+92 321 7654321'
   },
@@ -26,7 +24,7 @@ export const SEED_USERS: User[] = [
     name: 'Sara Ali',
     email: 'sara@funters.com',
     role: UserRole.MEMBER,
-    avatar: 'https://picsum.photos/seed/member2/200',
+    avatar: '👩',
     joinedAt: '2024-05-10'
   }
 ];
@@ -80,6 +78,6 @@ export const INITIAL_DEV_PROFILE: DevProfile = {
   name: 'Abubakar',
   title: 'Full Stack Developer',
   email: 'abubakar@funters.com',
-  image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Abubakar',
+  image: '👨‍💻',
   bio: "I'm Abubakar, the developer behind this Fund Manager platform. I am a Full Stack Developer dedicated to building robust, scalable applications that simplify community management and financial coordination."
 };

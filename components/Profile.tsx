@@ -1,22 +1,66 @@
-
 import React, { useState } from 'react';
-import { useApp } from '../state';
+import { useApp, EMOJI_CATEGORIES } from '../state';
 import { UserRole } from '../types';
-import { Mail, Github, Linkedin, Camera, LogOut, Save, X, Edit3, Shield, User as UserIcon } from 'lucide-react';
+import { Mail, Github, Linkedin, Camera, LogOut, Save, X, Edit3, Shield, User as UserIcon, Sparkles } from 'lucide-react';
+
+const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
+  const [activeCat, setActiveCat] = useState(EMOJI_CATEGORIES[0].name);
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom duration-300">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+          <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Select Avatar Emoji</h4>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        
+        <div className="flex bg-slate-50 dark:bg-slate-800/50 p-1.5 overflow-x-auto no-scrollbar">
+          {EMOJI_CATEGORIES.map(cat => (
+            <button
+              key={cat.name}
+              onClick={() => setActiveCat(cat.name)}
+              className={`px-4 py-2 text-[9px] font-black rounded-xl transition-all whitespace-nowrap ${activeCat === cat.name ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 h-[300px] overflow-y-auto grid grid-cols-5 gap-3">
+          {EMOJI_CATEGORIES.find(c => c.name === activeCat)?.emojis.map(emoji => (
+            <button
+              key={emoji}
+              onClick={() => {
+                onSelect(emoji);
+                onClose();
+              }}
+              className="aspect-square flex items-center justify-center text-2xl bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-2xl transition-all active:scale-90"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Profile: React.FC = () => {
   const { devProfile, currentUser, logout, updateUser, updateDevProfile } = useApp();
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [isEditingDev, setIsEditingDev] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<'USER' | 'DEV' | null>(null);
   
   // User Edit State
   const [userName, setUserName] = useState(currentUser?.name || '');
-  const [userAvatar, setUserAvatar] = useState(currentUser?.avatar || '');
+  const [userAvatar, setUserAvatar] = useState(currentUser?.avatar || '👤');
   
   // Dev Edit State
   const [devName, setDevName] = useState(devProfile.name);
   const [devTitle, setDevTitle] = useState(devProfile.title);
-  const [devImage, setDevImage] = useState(devProfile.image);
+  const [devImage, setDevImage] = useState(devProfile.image || '👨‍💻');
   const [devBio, setDevBio] = useState(devProfile.bio);
 
   const handleSaveUser = async () => {
@@ -46,14 +90,17 @@ const Profile: React.FC = () => {
     }
   };
 
-  const generateRandomAvatar = () => {
-    const seed = Math.random().toString(36).substring(7);
-    const newAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-    setUserAvatar(newAvatar);
-  };
-
   return (
     <div className="animate-in flex flex-col items-center pb-24">
+      {pickerTarget && (
+        <EmojiPickerModal 
+          onSelect={(emoji) => {
+            if (pickerTarget === 'USER') setUserAvatar(emoji);
+            if (pickerTarget === 'DEV') setDevImage(emoji);
+          }} 
+          onClose={() => setPickerTarget(null)} 
+        />
+      )}
       
       {/* Dev Header Banner Area */}
       <div className="w-full bg-indigo-600 dark:bg-indigo-900 h-40 rounded-t-[40px] relative transition-colors shadow-lg overflow-hidden">
@@ -64,20 +111,16 @@ const Profile: React.FC = () => {
          </div>
          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full border-[6px] border-[#97bc3a] shadow-2xl overflow-hidden bg-white dark:bg-slate-900 transition-colors">
-                 <img 
-                  src={isEditingDev ? devImage : devProfile.image} 
-                  alt="Developer" 
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-32 h-32 rounded-full border-[6px] border-[#97bc3a] shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-colors">
+                 <span className="text-6xl">{isEditingDev ? devImage : devProfile.image}</span>
               </div>
               {isEditingDev && (
                 <button 
-                  onClick={() => setDevImage(`https://api.dicebear.com/7.x/pixel-art/svg?seed=${Math.random()}`)}
+                  onClick={() => setPickerTarget('DEV')}
                   className="absolute bottom-2 right-2 bg-indigo-600 text-white p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all"
-                  title="Randomize Dev Avatar"
+                  title="Open Emoji Picker"
                 >
-                  <Camera size={14} />
+                  <Sparkles size={14} />
                 </button>
               )}
             </div>
@@ -91,7 +134,7 @@ const Profile: React.FC = () => {
                 type="text" 
                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-sm font-black outline-none dark:text-slate-100"
                 value={devName}
-                onChange={(e) => setDevName(e.target.value)}
+                onChange={(e) => setUserName(e.target.value)}
                 placeholder="Developer Name"
              />
              <input 
@@ -162,19 +205,15 @@ const Profile: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 rounded-2xl border-2 border-slate-50 dark:border-slate-800 shadow-md overflow-hidden bg-slate-50 dark:bg-slate-800 transition-colors">
-                <img 
-                  src={isEditingUser ? userAvatar : (currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.id}`)} 
-                  alt="User Avatar" 
-                  className="w-full h-full object-cover" 
-                />
+              <div className="w-16 h-16 rounded-2xl border-2 border-slate-50 dark:border-slate-800 shadow-md flex items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors">
+                <span className="text-3xl">{isEditingUser ? userAvatar : (currentUser?.avatar || '👤')}</span>
               </div>
               {isEditingUser && (
                 <button 
-                  onClick={generateRandomAvatar}
+                  onClick={() => setPickerTarget('USER')}
                   className="absolute -bottom-1 -right-1 bg-indigo-600 text-white p-1.5 rounded-lg shadow-lg hover:scale-110 active:scale-95 transition-all"
                 >
-                  <Camera size={10} />
+                  <Sparkles size={10} />
                 </button>
               )}
             </div>

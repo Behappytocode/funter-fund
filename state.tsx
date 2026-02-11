@@ -25,6 +25,27 @@ import { INITIAL_DEV_PROFILE } from './mockData';
 
 type Theme = 'light' | 'dark';
 
+export const EMOJI_CATEGORIES = [
+  {
+    name: 'Smileys',
+    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '☺️', '😊', '😇', '🙂', '🙃', '😉', '😍', '🤩', '😘', '😗', '😚', '😋', '😛', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🥳', '😏']
+  },
+  {
+    name: 'Hearts',
+    emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝']
+  },
+  {
+    name: 'Hands',
+    emojis: ['👍', '👎', '👌', '🤌', '✌️', '🤞', '🤟', '🤘', '🤙', '🖐️', '✋', '🖖', '👋', '🤚', '✍️', '👏', '🙌', '👐', '🤲', '🙏']
+  },
+  {
+    name: 'Cool',
+    emojis: ['🦁', '🐯', '🦊', '🐱', '🐶', '🦄', '🐲', '🤖', '👾', '👽', '👻', '🦸', '🦹', '🧙', '🧛', '🧟', '🕵️', '👨‍💻', '👩‍💻', '👤']
+  }
+];
+
+const ALL_EMOJIS = EMOJI_CATEGORIES.flatMap(c => c.emojis);
+
 interface AppState {
   currentUser: User | null;
   users: User[];
@@ -85,12 +106,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (userDoc.exists()) {
           setCurrentUser(userDoc.data() as User);
         } else {
+          const randomEmoji = ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)];
           const newUser: User = {
             id: firebaseUser.uid,
             name: firebaseUser.displayName || 'New Member',
             email: firebaseUser.email || '',
             role: UserRole.MEMBER,
-            avatar: firebaseUser.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
+            avatar: randomEmoji,
             joinedAt: new Date().toISOString().split('T')[0]
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
@@ -180,12 +202,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       await updateProfile(firebaseUser, { displayName: name });
       
+      const randomEmoji = ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)];
       const newUser: User = {
         id: firebaseUser.uid,
         name,
         email,
         role,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${firebaseUser.uid}`,
+        avatar: randomEmoji,
         joinedAt: new Date().toISOString().split('T')[0]
       };
       

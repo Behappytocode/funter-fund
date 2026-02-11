@@ -1,12 +1,57 @@
 import React, { useState } from 'react';
-import { useApp } from '../state';
-import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera, Trash2 } from 'lucide-react';
+import { useApp, EMOJI_CATEGORIES } from '../state';
+import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera, Trash2, Sparkles } from 'lucide-react';
 import { User } from '../types';
+
+const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
+  const [activeCat, setActiveCat] = useState(EMOJI_CATEGORIES[0].name);
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom duration-300">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+          <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Pick Member Avatar</h4>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        
+        <div className="flex bg-slate-50 dark:bg-slate-800/50 p-1.5 overflow-x-auto no-scrollbar">
+          {EMOJI_CATEGORIES.map(cat => (
+            <button
+              key={cat.name}
+              onClick={() => setActiveCat(cat.name)}
+              className={`px-4 py-2 text-[9px] font-black rounded-xl transition-all whitespace-nowrap ${activeCat === cat.name ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 h-[300px] overflow-y-auto grid grid-cols-5 gap-3">
+          {EMOJI_CATEGORIES.find(c => c.name === activeCat)?.emojis.map(emoji => (
+            <button
+              key={emoji}
+              onClick={() => {
+                onSelect(emoji);
+                onClose();
+              }}
+              className="aspect-square flex items-center justify-center text-2xl bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-2xl transition-all active:scale-90"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminPanel: React.FC = () => {
   const { users, updateUser, deleteUser, currentUser } = useApp();
   const [activeTab, setActiveTab] = useState<'MEMBERS' | 'DOCS'>('MEMBERS');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   
   // Edit State
   const [editName, setEditName] = useState('');
@@ -15,7 +60,7 @@ const AdminPanel: React.FC = () => {
   const startEditing = (user: User) => {
     setEditingUserId(user.id);
     setEditName(user.name);
-    setEditAvatar(user.avatar || '');
+    setEditAvatar(user.avatar || '👤');
   };
 
   const handleSaveUser = async () => {
@@ -46,13 +91,15 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const generateRandomAvatar = () => {
-    const seed = Math.random().toString(36).substring(7);
-    setEditAvatar(`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`);
-  };
-  
   return (
     <div className="space-y-8 animate-in transition-colors">
+      {isPickerOpen && (
+        <EmojiPickerModal 
+          onSelect={(emoji) => setEditAvatar(emoji)} 
+          onClose={() => setIsPickerOpen(false)} 
+        />
+      )}
+
       <div className="mb-2">
         <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Management Console</h2>
         <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">System governance and user management.</p>
@@ -86,12 +133,8 @@ const AdminPanel: React.FC = () => {
                 {users.map(user => (
                   <div key={user.id} className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800 shrink-0 shadow-sm">
-                        <img 
-                          src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
-                          className="w-full h-full object-cover" 
-                          alt={user.name} 
-                        />
+                      <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-800 shrink-0 shadow-sm">
+                        <span className="text-xl">{user.avatar || '👤'}</span>
                       </div>
                       {editingUserId === user.id ? (
                         <div className="space-y-2 flex-1 max-w-xs">
@@ -102,19 +145,14 @@ const AdminPanel: React.FC = () => {
                               onChange={(e) => setEditName(e.target.value)}
                            />
                            <div className="flex items-center gap-2">
-                             <input 
-                                type="text" 
-                                className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[9px] font-medium dark:text-slate-100"
-                                value={editAvatar}
-                                onChange={(e) => setEditAvatar(e.target.value)}
-                                placeholder="Avatar URL"
-                             />
+                             <div className="w-8 h-8 flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/30 rounded-lg text-lg">
+                               {editAvatar}
+                             </div>
                              <button 
-                               onClick={generateRandomAvatar} 
-                               className="p-1.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg"
-                               title="Random Picture"
+                               onClick={() => setIsPickerOpen(true)} 
+                               className="p-1.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center gap-1 text-[10px] font-black uppercase"
                              >
-                               <Camera size={14}/>
+                               <Sparkles size={12}/> Select
                              </button>
                            </div>
                         </div>
@@ -196,45 +234,6 @@ const AdminPanel: React.FC = () => {
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Modifications: Admins have exclusive rights to edit member details, remove incorrect entries, and oversee directory membership.</p>
                 </li>
               </ul>
-            </div>
-
-            <div className="bg-[#1e1b4b] dark:bg-indigo-950 p-8 rounded-[40px] text-white shadow-xl transition-colors">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-amber-400">
-                  <ShieldCheck size={20} />
-                </div>
-                <h3 className="text-sm font-black uppercase">The 70/30 Recovery Logic</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 p-5 rounded-3xl border border-white/10">
-                  <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Recoverable Debt</p>
-                  <p className="text-lg font-black text-indigo-400">70%</p>
-                  <p className="text-[7px] text-slate-400 font-medium uppercase mt-2 italic">Paid back in installments</p>
-                </div>
-                <div className="bg-white/5 p-5 rounded-3xl border border-white/10">
-                  <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Waiver (Crisis Relief)</p>
-                  <p className="text-lg font-black text-emerald-400">30%</p>
-                  <p className="text-[7px] text-slate-400 font-medium uppercase mt-2 italic">Non-recoverable grant</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <Database size={20} />
-                </div>
-                <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase">Architecture</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors">
-                  <h4 className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">Real-time DB: Firestore</h4>
-                  <div className="text-[9px] text-slate-400 font-mono tracking-tight leading-relaxed">
-                    Collection: users &rarr; {'{id, name, email, role, avatar}'}<br/>
-                    Collection: loans &rarr; {'{id, amount, installments, status}'}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}

@@ -39,12 +39,8 @@ const Circle: React.FC = () => {
             className="bg-white dark:bg-slate-900 p-5 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-100 dark:hover:border-indigo-900 transition-all group"
           >
             <div className="relative">
-              <div className="w-14 h-14 rounded-full border-2 border-slate-50 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                <img 
-                  src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
-                  alt={user.name} 
-                  className="w-full h-full object-cover" 
-                />
+              <div className="w-14 h-14 rounded-full border-2 border-slate-50 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-800 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                <span className="text-2xl">{user.avatar || '👤'}</span>
               </div>
               {user.role === UserRole.ADMIN && (
                 <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-1 rounded-full shadow-lg">

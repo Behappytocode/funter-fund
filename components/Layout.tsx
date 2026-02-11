@@ -51,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
                 className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-105 transition-transform shadow-sm"
               >
                 {currentUser.avatar ? (
-                  <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                  <span className="text-sm">{currentUser.avatar}</span>
                 ) : (
                   <span className="text-xs font-black text-indigo-600 uppercase">{currentUser.name.charAt(0)}</span>
                 )}
