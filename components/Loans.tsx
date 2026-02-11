@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../state';
 import { UserRole, LoanStatus } from '../types';
-import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle, Trash2, CheckCircle, Sparkles } from 'lucide-react';
+import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle, Trash2, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 
 const Loans: React.FC = () => {
   const { loans, currentUser, users, issueLoan, approveLoan, rejectLoan, payInstallment } = useApp();
@@ -10,6 +10,7 @@ const Loans: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'REQUESTS' | 'COMPLETED'>('ACTIVE');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Form State
@@ -90,6 +91,20 @@ const Loans: React.FC = () => {
     e.stopPropagation();
     if (confirm("Delete this loan request? This action cannot be undone.")) {
       await rejectLoan(id);
+    }
+  };
+
+  const handlePayInstallment = async (loanId: string, installmentId: string) => {
+    if (confirm("Confirm installment payment? This will update the recovery balance.")) {
+      setPayingId(installmentId);
+      try {
+        await payInstallment(loanId, installmentId);
+      } catch (err) {
+        console.error("Payment failed", err);
+        alert("Failed to process payment. Please try again.");
+      } finally {
+        setPayingId(null);
+      }
     }
   };
 
@@ -289,8 +304,8 @@ const Loans: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-lg">
-                    {currentUser?.avatar || '👤'}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-lg overflow-hidden shrink-0">
+                    <span className="select-none">{(currentUser?.avatar && currentUser.avatar.length <= 8) ? currentUser.avatar : '👤'}</span>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{currentUser?.name}</p>
@@ -365,14 +380,16 @@ const Loans: React.FC = () => {
 
       {/* Amortization Drawer & Modal */}
       {selectedLoan && activeLoanData && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm">
-          <div className="absolute inset-x-0 bottom-0 bg-white dark:bg-slate-900 rounded-t-[48px] max-h-[90vh] overflow-y-auto shadow-2xl transition-all">
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="absolute inset-x-0 bottom-0 bg-white dark:bg-slate-900 rounded-t-[48px] max-h-[90vh] overflow-y-auto shadow-2xl transition-all slide-in-from-bottom duration-500">
              <div className="sticky top-0 bg-white dark:bg-slate-900 p-8 pb-4 z-10 border-b border-slate-50 dark:border-slate-800 transition-colors">
                 <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-8" />
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{activeLoanData.memberName}</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">{activeLoanData.status === LoanStatus.PENDING ? 'Projected' : 'Official'} Repayment Schedule</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">
+                      {activeLoanData.status === LoanStatus.PENDING ? 'Projected' : 'Official'} Repayment Schedule
+                    </p>
                   </div>
                   <button onClick={() => setSelectedLoan(null)} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">✕</button>
                 </div>
@@ -388,7 +405,7 @@ const Loans: React.FC = () => {
                 {activeLoanData.installments.map((inst, idx) => (
                   <div key={inst.id} className="flex gap-6 items-start">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-2xl flex items-center justify-center border-2 shadow-sm transition-all duration-500 ${inst.status === 'PAID' ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500 text-white' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-300 dark:text-slate-600'}`}>
+                      <div className={`w-8 h-8 rounded-2xl flex items-center justify-center border-2 shadow-sm transition-all duration-500 ${inst.status === 'PAID' ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500 text-white' : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-slate-300 dark:text-slate-600'}`}>
                         {inst.status === 'PAID' ? <CheckCircle2 size={14} /> : <span className="text-xs font-black">{idx + 1}</span>}
                       </div>
                       {idx < activeLoanData.installments.length - 1 && <div className="w-0.5 h-16 bg-slate-100 dark:bg-slate-800 my-1" />}
@@ -397,7 +414,28 @@ const Loans: React.FC = () => {
                       <div>
                         <p className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">Rs. {inst.amount.toLocaleString()}</p>
                         <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">DUE: {inst.dueDate}</p>
+                        {inst.paidDate && (
+                           <p className="text-[8px] text-emerald-500 font-black uppercase mt-1 tracking-widest">PAID ON: {inst.paidDate}</p>
+                        )}
                       </div>
+                      
+                      {/* Admin Installment Payment Button */}
+                      {currentUser?.role === UserRole.ADMIN && activeLoanData.status === LoanStatus.ACTIVE && inst.status === 'PENDING' && (
+                        <button 
+                          onClick={() => handlePayInstallment(activeLoanData.id, inst.id)}
+                          disabled={payingId === inst.id}
+                          className="px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {payingId === inst.id ? <Loader2 size={12} className="animate-spin" /> : <DollarSign size={12} />}
+                          Mark as Paid
+                        </button>
+                      )}
+
+                      {inst.status === 'PAID' && (
+                        <span className="text-[8px] font-black bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-2.5 py-1.5 rounded-lg uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/50">
+                          Success
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
