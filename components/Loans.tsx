@@ -89,8 +89,14 @@ const Loans: React.FC = () => {
 
   const handleReject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Delete this loan request? This action cannot be undone.")) {
+    const isPending = loans.find(l => l.id === id)?.status === LoanStatus.PENDING;
+    const confirmMsg = isPending 
+      ? `Reject and delete this loan request from ${loans.find(l => l.id === id)?.memberName}?`
+      : `CRITICAL: Remove this ${loans.find(l => l.id === id)?.status} loan for ${loans.find(l => l.id === id)?.memberName}? This will delete all recovery history permanently.`;
+    
+    if (confirm(confirmMsg)) {
       await rejectLoan(id);
+      if (selectedLoan === id) setSelectedLoan(null);
     }
   };
 
@@ -189,13 +195,24 @@ const Loans: React.FC = () => {
                 <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{l.memberName}</h4>
                 <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">ID: {l.id.toUpperCase()}</p>
               </div>
-              <span className={`text-[8px] px-3 py-1.5 rounded-full font-black tracking-widest uppercase ${
-                l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' : 
-                l.status === LoanStatus.PENDING ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400' :
-                'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
-              }`}>
-                {l.status}
-              </span>
+              <div className="flex items-center gap-3">
+                {currentUser?.role === UserRole.ADMIN && l.status !== LoanStatus.PENDING && (
+                  <button 
+                    onClick={(e) => handleReject(l.id, e)}
+                    className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                    title="Remove Loan"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                <span className={`text-[8px] px-3 py-1.5 rounded-full font-black tracking-widest uppercase ${
+                  l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' : 
+                  l.status === LoanStatus.PENDING ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400' :
+                  'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+                }`}>
+                  {l.status}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-8 mb-6">
@@ -320,7 +337,7 @@ const Loans: React.FC = () => {
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
                   <input 
                     type="number" 
-                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors"
+                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors"
                     placeholder="50000"
                     required
                     value={amount}
