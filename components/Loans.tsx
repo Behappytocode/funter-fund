@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../state';
 import { UserRole, LoanStatus } from '../types';
-import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle } from 'lucide-react';
+// Added Sparkles to the imported icons from lucide-react
+import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle, Trash2, CheckCircle, Sparkles } from 'lucide-react';
 
 const Loans: React.FC = () => {
-  const { loans, currentUser, users, issueLoan, payInstallment } = useApp();
+  const { loans, currentUser, users, issueLoan, approveLoan, rejectLoan, payInstallment } = useApp();
   const [isAdding, setIsAdding] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'ACTIVE' | 'COMPLETED'>('ACTIVE');
+  const [activeTab, setActiveTab] = useState<'ACTIVE' | 'REQUESTS' | 'COMPLETED'>('ACTIVE');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,22 +20,35 @@ const Loans: React.FC = () => {
   const [duration, setDuration] = useState('6');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
 
+  useEffect(() => {
+    if (currentUser?.role === UserRole.MEMBER) {
+      setMemberId(currentUser.id);
+    }
+  }, [currentUser]);
+
   const activeLoanData = loans.find(l => l.id === selectedLoan);
 
   const filteredLoans = (currentUser?.role === UserRole.ADMIN ? loans : loans.filter(l => l.memberId === currentUser?.id))
-    .filter(l => l.status === (activeTab === 'ACTIVE' ? LoanStatus.ACTIVE : LoanStatus.COMPLETED))
+    .filter(l => {
+      if (activeTab === 'ACTIVE') return l.status === LoanStatus.ACTIVE;
+      if (activeTab === 'COMPLETED') return l.status === LoanStatus.COMPLETED;
+      if (activeTab === 'REQUESTS') return l.status === LoanStatus.PENDING;
+      return false;
+    })
     .filter(l => l.memberName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     
-    if (!memberId) {
+    const targetMemberId = currentUser?.role === UserRole.ADMIN ? memberId : currentUser?.id;
+
+    if (!targetMemberId) {
       setError("Please select a member");
       return;
     }
 
-    const member = users.find(u => u.id === memberId);
+    const member = users.find(u => u.id === targetMemberId);
     if (!member) {
       setError("Selected member not found");
       return;
@@ -47,26 +62,41 @@ const Loans: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      const initialStatus = currentUser?.role === UserRole.ADMIN ? LoanStatus.ACTIVE : LoanStatus.PENDING;
       await issueLoan({
         memberId: member.id,
         memberName: member.name,
         totalAmount: loanAmount,
         durationMonths: parseInt(duration),
         startDate
-      });
+      }, initialStatus);
       setIsAdding(false);
       resetForm();
-      alert("Loan successfully issued!");
+      alert(currentUser?.role === UserRole.ADMIN ? "Loan successfully issued!" : "Loan request submitted for review!");
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Failed to issue loan. Check your permissions.");
+      setError(err.message || "Failed to process loan. Check your permissions.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleApprove = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Approve this loan request? Recovery schedule will activate immediately.")) {
+      await approveLoan(id);
+    }
+  };
+
+  const handleReject = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Delete this loan request? This action cannot be undone.")) {
+      await rejectLoan(id);
+    }
+  };
+
   const resetForm = () => {
-    setMemberId('');
+    setMemberId(currentUser?.role === UserRole.MEMBER ? currentUser.id : '');
     setAmount('');
     setDuration('6');
     setStartDate(new Date().toISOString().split('T')[0]);
@@ -84,18 +114,16 @@ const Loans: React.FC = () => {
           <button className="p-2.5 text-slate-400 dark:text-slate-600 hover:text-indigo-600 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl transition-colors">
             <Download size={18} />
           </button>
-          {currentUser?.role === UserRole.ADMIN && (
-            <button 
-              onClick={() => {
-                resetForm();
-                setIsAdding(true);
-              }}
-              className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 transition-transform"
-            >
-              <Plus size={18} />
-              <span className="text-xs tracking-tight">New Loan</span>
-            </button>
-          )}
+          <button 
+            onClick={() => {
+              resetForm();
+              setIsAdding(true);
+            }}
+            className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 transition-transform"
+          >
+            <Plus size={18} />
+            <span className="text-xs tracking-tight">{currentUser?.role === UserRole.ADMIN ? 'New Loan' : 'Request Loan'}</span>
+          </button>
         </div>
       </div>
 
@@ -106,6 +134,15 @@ const Loans: React.FC = () => {
           className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${activeTab === 'ACTIVE' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           ACTIVE
+        </button>
+        <button 
+          onClick={() => setActiveTab('REQUESTS')}
+          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all relative ${activeTab === 'REQUESTS' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+        >
+          REQUESTS
+          {loans.filter(l => l.status === LoanStatus.PENDING).length > 0 && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900" />
+          )}
         </button>
         <button 
           onClick={() => setActiveTab('COMPLETED')}
@@ -140,7 +177,9 @@ const Loans: React.FC = () => {
                 <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">ID: {l.id.toUpperCase()}</p>
               </div>
               <span className={`text-[8px] px-3 py-1.5 rounded-full font-black tracking-widest uppercase ${
-                l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+                l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' : 
+                l.status === LoanStatus.PENDING ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400' :
+                'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
               }`}>
                 {l.status}
               </span>
@@ -157,34 +196,65 @@ const Loans: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                <span className="text-slate-400 dark:text-slate-500">Recovery Status</span>
-                <span className="text-indigo-600 dark:text-indigo-400">{Math.round(((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100)}%</span>
+            {l.status !== LoanStatus.PENDING ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                  <span className="text-slate-400 dark:text-slate-500">Recovery Status</span>
+                  <span className="text-indigo-600 dark:text-indigo-400">{Math.round(((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100)}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-700 rounded-full" 
+                    style={{ width: `${((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-700 rounded-full" 
-                  style={{ width: `${((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100}%` }}
-                />
+            ) : (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-amber-500" />
+                  <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">Review Pending</span>
+                </div>
+                {currentUser?.role === UserRole.ADMIN && (
+                   <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => handleReject(l.id, e)}
+                        className="p-2 bg-white dark:bg-slate-800 text-rose-500 rounded-lg hover:bg-rose-50 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleApprove(l.id, e)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-[8px] font-black rounded-lg hover:bg-indigo-700 transition-all uppercase tracking-widest"
+                      >
+                        <CheckCircle size={10} /> Approve
+                      </button>
+                   </div>
+                )}
               </div>
-            </div>
+            )}
 
             <div className="mt-6 flex items-center justify-between text-[9px] font-black text-slate-400 dark:text-slate-500 border-t border-slate-50 dark:border-slate-800 pt-4 uppercase tracking-widest">
-              <span>Remaining: <span className="text-slate-800 dark:text-slate-200">Rs. {l.remainingBalance.toLocaleString()}</span></span>
+              <span>{l.status === LoanStatus.PENDING ? 'Projected Installments' : 'Remaining'}: <span className="text-slate-800 dark:text-slate-200">Rs. {l.remainingBalance.toLocaleString()}</span></span>
               <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
                 Details <ChevronRight size={12} />
               </div>
             </div>
           </div>
         ))}
-        {filteredLoans.length === 0 && (
+        {filteredLoans.length === 0 && (activeTab !== 'REQUESTS' || currentUser?.role === UserRole.ADMIN) && (
           <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-[40px] border border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center grayscale opacity-40">
             <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                <Landmark size={32} className="text-slate-300 dark:text-slate-700" />
             </div>
-            <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">No Active Records.</p>
+            <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">No {activeTab.toLowerCase()} records.</p>
           </div>
+        )}
+        {filteredLoans.length === 0 && activeTab === 'REQUESTS' && currentUser?.role === UserRole.MEMBER && (
+           <div className="text-center py-12 px-8 bg-indigo-50 dark:bg-indigo-950/20 rounded-[40px] border border-indigo-100 dark:border-indigo-900/30 flex flex-col items-center">
+              <Sparkles size={24} className="text-indigo-400 mb-3" />
+              <p className="text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest leading-relaxed">You have no active loan requests. Need help? Use the "Request Loan" button above.</p>
+           </div>
         )}
       </div>
 
@@ -193,7 +263,7 @@ const Loans: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl transition-all">
             <div className="bg-indigo-600 p-8 text-white relative">
-              <h3 className="text-xl font-black">Issue New Loan</h3>
+              <h3 className="text-xl font-black">{currentUser?.role === UserRole.ADMIN ? 'Issue New Loan' : 'Request Personal Loan'}</h3>
               <p className="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-70">Automated 70/30 Recovery Split</p>
               <button 
                 onClick={() => setIsAdding(false)} 
@@ -207,25 +277,38 @@ const Loans: React.FC = () => {
                 </div>
               )}
 
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Select Member</label>
-                <div className="relative">
-                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
-                  <select 
-                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors appearance-none"
-                    required
-                    value={memberId}
-                    onChange={(e) => setMemberId(e.target.value)}
-                  >
-                    <option value="">CHOOSE A MEMBER</option>
-                    {users.map(u => (
-                      <option key={u.id} value={u.id} className="dark:bg-slate-900">{u.name.toUpperCase()}</option>
-                    ))}
-                  </select>
+              {currentUser?.role === UserRole.ADMIN ? (
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Select Member</label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                    <select 
+                      className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors appearance-none"
+                      required
+                      value={memberId}
+                      onChange={(e) => setMemberId(e.target.value)}
+                    >
+                      <option value="">CHOOSE A MEMBER</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id} className="dark:bg-slate-900">{u.name.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white dark:border-slate-600">
+                    <img src={currentUser?.avatar} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{currentUser?.name}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Self-Request</p>
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Total Amount (Rs.)</label>
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Requested Amount (Rs.)</label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
                   <input 
@@ -253,7 +336,7 @@ const Loans: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Start Date</label>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Needed By Date</label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
                     <input 
@@ -281,7 +364,7 @@ const Loans: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full bg-indigo-600 text-white font-black py-5 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
               >
-                {isSubmitting ? 'Processing...' : 'Approve & Issue'}
+                {isSubmitting ? 'Processing...' : currentUser?.role === UserRole.ADMIN ? 'Approve & Issue' : 'Submit Loan Request'}
               </button>
             </form>
           </div>
@@ -297,7 +380,7 @@ const Loans: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{activeLoanData.memberName}</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">Loan Repayment Schedule</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">{activeLoanData.status === LoanStatus.PENDING ? 'Projected' : 'Official'} Repayment Schedule</p>
                   </div>
                   <button onClick={() => setSelectedLoan(null)} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">✕</button>
                 </div>
@@ -319,7 +402,12 @@ const Loans: React.FC = () => {
              </div>
 
              <div className="p-8 pb-24 space-y-6">
-                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Installment Timeline</h4>
+                <div className="flex items-center justify-between ml-1">
+                  <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Installment Timeline</h4>
+                  {activeLoanData.status === LoanStatus.PENDING && (
+                    <span className="text-[8px] font-black text-amber-500 uppercase tracking-tighter bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded">Subject to Approval</span>
+                  )}
+                </div>
                 {activeLoanData.installments.map((inst, idx) => (
                   <div key={inst.id} className="flex gap-6 items-start">
                     <div className="flex flex-col items-center">
@@ -338,7 +426,7 @@ const Loans: React.FC = () => {
                           <CheckCircle2 size={10} /> Paid
                         </div>
                       ) : (
-                        currentUser?.role === UserRole.ADMIN ? (
+                        currentUser?.role === UserRole.ADMIN && activeLoanData.status === LoanStatus.ACTIVE ? (
                           <button 
                             disabled={isSubmitting}
                             onClick={async () => {
@@ -357,7 +445,7 @@ const Loans: React.FC = () => {
                           </button>
                         ) : (
                           <div className="text-[9px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full">
-                            <Clock size={10} /> Pending
+                            <Clock size={10} /> {activeLoanData.status === LoanStatus.PENDING ? 'Projected' : 'Pending'}
                           </div>
                         )
                       )}

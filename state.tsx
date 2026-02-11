@@ -17,6 +17,7 @@ import {
   onSnapshot, 
   addDoc, 
   updateDoc, 
+  deleteDoc,
   query, 
   orderBy 
 } from 'firebase/firestore';
@@ -39,7 +40,9 @@ interface AppState {
   signupWithEmail: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   addDeposit: (deposit: Omit<Deposit, 'id' | 'entryDate'>) => Promise<void>;
-  issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => Promise<void>;
+  issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>, initialStatus?: LoanStatus) => Promise<void>;
+  approveLoan: (loanId: string) => Promise<void>;
+  rejectLoan: (loanId: string) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
   updateUser: (uid: string, data: Partial<User>) => Promise<void>;
   updateDevProfile: (data: Partial<DevProfile>) => Promise<void>;
@@ -132,12 +135,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [currentUser?.id]);
 
   const summary: FinancialSummary = (() => {
+    const activeLoans = loans.filter(l => l.status !== LoanStatus.PENDING);
     const totalDeposits = deposits.reduce((sum, d) => sum + d.amount, 0);
-    const totalLoansIssued = loans.reduce((sum, l) => sum + l.totalAmount, 0);
-    const totalRecoveries = loans.reduce((sum, l) => {
+    const totalLoansIssued = activeLoans.reduce((sum, l) => sum + l.totalAmount, 0);
+    const totalRecoveries = activeLoans.reduce((sum, l) => {
       return sum + l.installments.reduce((iSum, i) => iSum + i.paidAmount, 0);
     }, 0);
-    const totalWaivers = loans.reduce((sum, l) => sum + l.waiverAmount, 0);
+    const totalWaivers = activeLoans.reduce((sum, l) => sum + l.waiverAmount, 0);
     const currentBalance = totalDeposits - totalLoansIssued + totalRecoveries;
 
     return {
@@ -200,7 +204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const issueLoan = async (params: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>) => {
+  const issueLoan = async (params: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>, initialStatus: LoanStatus = LoanStatus.ACTIVE) => {
     const recoverableAmount = params.totalAmount * 0.7;
     const waiverAmount = params.totalAmount * 0.3;
     const duration = Number(params.durationMonths);
@@ -223,9 +227,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       recoverableAmount,
       waiverAmount,
       remainingBalance: recoverableAmount,
-      status: LoanStatus.ACTIVE,
+      status: initialStatus,
       installments
     });
+  };
+
+  const approveLoan = async (loanId: string) => {
+    await updateDoc(doc(db, 'loans', loanId), {
+      status: LoanStatus.ACTIVE
+    });
+  };
+
+  const rejectLoan = async (loanId: string) => {
+    await deleteDoc(doc(db, 'loans', loanId));
   };
 
   const payInstallment = async (loanId: string, installmentId: string) => {
@@ -269,7 +283,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       currentUser, users, deposits, loans, devProfile, summary, loading, theme, toggleTheme,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
-      addDeposit, issueLoan, payInstallment, updateUser, updateDevProfile
+      addDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, updateDevProfile
     }}>
       {children}
     </AppContext.Provider>

@@ -25,6 +25,7 @@ export interface Deposit {
 }
 
 export enum LoanStatus {
+  PENDING = 'PENDING',
   ACTIVE = 'ACTIVE',
   COMPLETED = 'COMPLETED'
 }
