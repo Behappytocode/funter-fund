@@ -77,9 +77,9 @@ export const SEED_LOANS: Loan[] = [
 ];
 
 export const INITIAL_DEV_PROFILE: DevProfile = {
-  name: 'Senior Systems Architect',
-  title: 'Full Stack Engineer',
-  email: 'dev@funtersfund.io',
-  image: 'https://picsum.photos/seed/dev/300',
-  bio: 'Specializing in robust communal financial systems and secure mobile architectures.'
+  name: 'Abubakar',
+  title: 'Full Stack Developer',
+  email: 'abubakar@funters.com',
+  image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Abubakar',
+  bio: "I'm Abubakar, the developer behind this Fund Manager platform. I am a Full Stack Developer dedicated to building robust, scalable applications that simplify community management and financial coordination."
 };
