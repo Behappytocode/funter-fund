@@ -107,22 +107,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          setCurrentUser(userDoc.data() as User);
-        } else {
-          const randomEmoji = ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)];
-          const newUser: User = {
-            id: firebaseUser.uid,
-            name: firebaseUser.displayName || 'New Member',
-            email: firebaseUser.email || '',
-            role: UserRole.MEMBER,
-            status: UserStatus.PENDING,
-            avatar: randomEmoji,
-            joinedAt: new Date().toISOString().split('T')[0]
-          };
-          await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-          setCurrentUser(newUser);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            setCurrentUser(userDoc.data() as User);
+          } else {
+            const randomEmoji = ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)];
+            const newUser: User = {
+              id: firebaseUser.uid,
+              name: firebaseUser.displayName || 'New Member',
+              email: firebaseUser.email || '',
+              role: UserRole.MEMBER,
+              status: UserStatus.PENDING,
+              avatar: randomEmoji,
+              joinedAt: new Date().toISOString().split('T')[0]
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            setCurrentUser(newUser);
+          }
+        } catch (e) {
+          console.error("User initialization error:", e);
         }
       } else {
         setCurrentUser(null);
@@ -133,16 +137,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !auth.currentUser) return;
 
     // Users listener: Members can often only read themselves if rules are strict. 
-    // We try to read all for the Circle, but catch errors.
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const usersList = snap.docs.map(d => d.data() as User);
       setUsers(usersList);
       const updatedSelf = usersList.find(u => u.id === currentUser.id);
       if (updatedSelf) setCurrentUser(updatedSelf);
-    }, (err) => console.warn("Users listener permission issues:", err.message));
+    }, (err) => console.warn("Users listener restricted:", err.message));
 
     // Deposits listener: If Member, only listen to own deposits
     const depositsBaseQuery = collection(db, 'deposits');
@@ -152,7 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubDeposits = onSnapshot(depositsFilteredQuery, (snap) => {
       setDeposits(snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit)));
-    }, (err) => console.warn("Deposits listener permission issues:", err.message));
+    }, (err) => console.warn("Deposits listener restricted:", err.message));
 
     // Loans listener: If Member, only listen to own loans
     const loansBaseQuery = collection(db, 'loans');
@@ -162,7 +165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubLoans = onSnapshot(loansFilteredQuery, (snap) => {
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
-    }, (err) => console.warn("Loans listener permission issues:", err.message));
+    }, (err) => console.warn("Loans listener restricted:", err.message));
 
     // Feedback listener: Filter by threadId (which is the member's ID)
     const feedbackBaseQuery = collection(db, 'feedback');
@@ -172,13 +175,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const unsubFeedback = onSnapshot(feedbackFilteredQuery, (snap) => {
       setFeedbackMessages(snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage)));
-    }, (err) => console.warn("Feedback listener permission issues:", err.message));
+    }, (err) => console.warn("Feedback listener restricted:", err.message));
 
     const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {
       if (docSnap.exists()) {
         setDevProfile(docSnap.data() as DevProfile);
       }
-    }, (err) => console.warn("DevProfile listener permission issues:", err.message));
+    }, (err) => console.warn("Settings listener restricted:", err.message));
 
     return () => {
       unsubUsers();

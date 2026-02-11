@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn(); 
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /deposits/{depositId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.memberId == request.auth.uid));
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /loans/{loanId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.memberId == request.auth.uid));
+      allow create: if isAdmin() || (
+        isSignedIn() && 
+        request.resource.data.memberId == request.auth.uid && 
+        request.resource.data.status == 'PENDING'
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    match /feedback/{msgId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.threadId == request.auth.uid));
+      allow create: if isSignedIn() && (request.resource.data.threadId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
