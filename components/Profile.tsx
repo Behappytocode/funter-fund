@@ -8,27 +8,27 @@ const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: (
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom duration-300">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom sm:slide-in-from-top duration-300">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-          <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Select Avatar Emoji</h4>
+          <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Pick Avatar Emoji</h4>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <X size={18} />
           </button>
         </div>
         
-        <div className="flex bg-slate-50 dark:bg-slate-800/50 p-1.5 overflow-x-auto no-scrollbar">
+        <div className="flex bg-slate-50 dark:bg-slate-800/50 p-1.5 overflow-x-auto no-scrollbar scroll-smooth">
           {EMOJI_CATEGORIES.map(cat => (
             <button
               key={cat.name}
               onClick={() => setActiveCat(cat.name)}
-              className={`px-4 py-2 text-[9px] font-black rounded-xl transition-all whitespace-nowrap ${activeCat === cat.name ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+              className={`px-4 py-2 text-[9px] font-black rounded-xl transition-all whitespace-nowrap shrink-0 uppercase tracking-tighter ${activeCat === cat.name ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400'}`}
             >
               {cat.name}
             </button>
           ))}
         </div>
 
-        <div className="p-6 h-[300px] overflow-y-auto grid grid-cols-5 gap-3">
+        <div className="p-6 h-[320px] overflow-y-auto grid grid-cols-5 gap-3 no-scrollbar">
           {EMOJI_CATEGORIES.find(c => c.name === activeCat)?.emojis.map(emoji => (
             <button
               key={emoji}
@@ -36,7 +36,7 @@ const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: (
                 onSelect(emoji);
                 onClose();
               }}
-              className="aspect-square flex items-center justify-center text-2xl bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-2xl transition-all active:scale-90"
+              className="aspect-square flex items-center justify-center text-3xl bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-2xl transition-all active:scale-90 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
             >
               {emoji}
             </button>
@@ -129,12 +129,12 @@ const Profile: React.FC = () => {
 
       <div className="mt-20 w-full px-6 flex flex-col items-center text-center">
         {isEditingDev ? (
-          <div className="w-full space-y-4 bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm mt-4">
+          <div className="w-full space-y-4 bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm mt-4 animate-in fade-in duration-300">
              <input 
                 type="text" 
                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-sm font-black outline-none dark:text-slate-100"
                 value={devName}
-                onChange={(e) => setUserName(e.target.value)}
+                onChange={(e) => setDevName(e.target.value)}
                 placeholder="Developer Name"
              />
              <input 
@@ -157,7 +157,7 @@ const Profile: React.FC = () => {
           </div>
         ) : (
           <>
-            <h2 className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight transition-colors">{devProfile.name}</h2>
+            <h2 className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tight transition-colors uppercase">{devProfile.name}</h2>
             <p className="text-[14px] font-black text-[#97bc3a] uppercase tracking-[0.3em] mt-3">{devProfile.title}</p>
 
             <div className="flex items-center justify-center gap-6 mt-10">
@@ -183,7 +183,7 @@ const Profile: React.FC = () => {
                 onClick={() => setIsEditingDev(true)} 
                 className="mt-6 flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors"
               >
-                <Edit3 size={14} /> Edit Dev Profile
+                <Edit3 size={14} /> Edit Developer Info
               </button>
             )}
           </>
@@ -199,7 +199,7 @@ const Profile: React.FC = () => {
       <div className="w-full px-6 space-y-6">
         <div className="flex items-center gap-3 mb-2">
           <Shield size={16} className="text-indigo-600 dark:text-indigo-400" />
-          <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Member Account</h3>
+          <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Personal Account</h3>
         </div>
         
         <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
