@@ -57,10 +57,19 @@ const AdminPanel: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
 
+  const getSafeAvatar = (avatar: any) => {
+    if (!avatar || typeof avatar !== 'string') return '👤';
+    // Robust check: if it looks like a URL segment or is too long, fallback
+    if (avatar.length > 8 || avatar.includes('/') || avatar.includes('.') || avatar.includes('?')) {
+      return '👤';
+    }
+    return avatar;
+  };
+
   const startEditing = (user: User) => {
     setEditingUserId(user.id);
     setEditName(user.name);
-    setEditAvatar(user.avatar || '👤');
+    setEditAvatar(getSafeAvatar(user.avatar));
   };
 
   const handleSaveUser = async () => {
@@ -132,9 +141,11 @@ const AdminPanel: React.FC = () => {
               <div className="divide-y divide-slate-50 dark:divide-slate-800">
                 {users.map(user => (
                   <div key={user.id} className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-800 shrink-0 shadow-sm">
-                        <span className="text-xl">{user.avatar || '👤'}</span>
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-800 shrink-0 shadow-sm overflow-hidden">
+                        <span className="text-xl select-none pointer-events-none truncate max-w-full block text-center">
+                          {getSafeAvatar(user.avatar)}
+                        </span>
                       </div>
                       {editingUserId === user.id ? (
                         <div className="space-y-2 flex-1 max-w-xs">
@@ -157,14 +168,14 @@ const AdminPanel: React.FC = () => {
                            </div>
                         </div>
                       ) : (
-                        <div className="truncate">
-                          <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase truncate">{user.name}</h5>
-                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter mt-0.5">{user.email}</p>
+                        <div className="truncate flex-1 min-w-0">
+                          <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase truncate leading-tight">{user.name}</h5>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter mt-0.5 truncate">{user.email}</p>
                         </div>
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
                       {editingUserId === user.id ? (
                         <div className="flex gap-1.5">
                           <button 

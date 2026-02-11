@@ -91,15 +91,15 @@ const Deposits: React.FC = () => {
         <div className="divide-y divide-slate-50 dark:divide-slate-800">
           {filteredDeposits.map((d) => (
             <div key={d.id} className="px-6 py-5 grid grid-cols-5 gap-4 items-center group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-              <div className="col-span-2 flex items-center gap-4">
-                <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-xs shrink-0 uppercase transition-colors">
+              <div className="col-span-2 flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-xs shrink-0 uppercase transition-colors overflow-hidden">
                   {d.memberName.charAt(0)}
                 </div>
-                <div className="min-w-0">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase">{d.memberName}</h4>
+                <div className="min-w-0 truncate">
+                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate uppercase leading-tight">{d.memberName}</h4>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{d.paymentDate}</span>
-                    <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
                     <span className="text-[9px] font-black text-emerald-500 dark:text-emerald-400 uppercase">Verified</span>
                   </div>
                 </div>
@@ -107,7 +107,7 @@ const Deposits: React.FC = () => {
               <div className="text-center">
                 <p className="text-xs font-black text-slate-700 dark:text-slate-300 tracking-tight transition-colors">Rs. {d.amount.toLocaleString()}</p>
               </div>
-              <div className="text-right col-span-2 flex justify-end gap-1">
+              <div className="text-right col-span-2 flex justify-end gap-1 shrink-0">
                 <button className="p-2 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   <Eye size={16} />
                 </button>

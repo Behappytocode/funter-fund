@@ -12,6 +12,12 @@ const Circle: React.FC = () => {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getSafeAvatar = (avatar: string | undefined) => {
+    if (!avatar) return '👤';
+    // If the avatar string is long, it's likely a legacy URL, so we fallback to a default emoji.
+    return avatar.length > 7 ? '👤' : avatar;
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="mb-2">
@@ -38,9 +44,11 @@ const Circle: React.FC = () => {
             key={user.id} 
             className="bg-white dark:bg-slate-900 p-5 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-indigo-100 dark:hover:border-indigo-900 transition-all group"
           >
-            <div className="relative">
-              <div className="w-14 h-14 rounded-full border-2 border-slate-50 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-800 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                <span className="text-2xl">{user.avatar || '👤'}</span>
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-full border-2 border-slate-50 dark:border-slate-800 flex items-center justify-center bg-slate-100 dark:bg-slate-800 shadow-inner group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+                <span className="text-2xl pointer-events-none select-none">
+                  {getSafeAvatar(user.avatar)}
+                </span>
               </div>
               {user.role === UserRole.ADMIN && (
                 <div className="absolute -top-1 -right-1 bg-amber-500 text-white p-1 rounded-full shadow-lg">
@@ -55,11 +63,11 @@ const Circle: React.FC = () => {
                   {user.name}
                 </h3>
                 {user.role === UserRole.ADMIN ? (
-                  <span className="text-[7px] font-black bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                  <span className="text-[7px] font-black bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-tighter shrink-0">
                     ADMIN
                   </span>
                 ) : (
-                  <span className="text-[7px] font-black bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                  <span className="text-[7px] font-black bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded uppercase tracking-tighter shrink-0">
                     MEMBER
                   </span>
                 )}

@@ -53,14 +53,22 @@ const Profile: React.FC = () => {
   const [isEditingDev, setIsEditingDev] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<'USER' | 'DEV' | null>(null);
   
+  const getSafeAvatar = (avatar: any) => {
+    if (!avatar || typeof avatar !== 'string') return '👤';
+    if (avatar.length > 8 || avatar.includes('/') || avatar.includes('.') || avatar.includes('?')) {
+      return '👤';
+    }
+    return avatar;
+  };
+
   // User Edit State
   const [userName, setUserName] = useState(currentUser?.name || '');
-  const [userAvatar, setUserAvatar] = useState(currentUser?.avatar || '👤');
+  const [userAvatar, setUserAvatar] = useState(getSafeAvatar(currentUser?.avatar) || '👤');
   
   // Dev Edit State
   const [devName, setDevName] = useState(devProfile.name);
   const [devTitle, setDevTitle] = useState(devProfile.title);
-  const [devImage, setDevImage] = useState(devProfile.image || '👨‍💻');
+  const [devImage, setDevImage] = useState(getSafeAvatar(devProfile.image) || '👨‍💻');
   const [devBio, setDevBio] = useState(devProfile.bio);
 
   const handleSaveUser = async () => {
@@ -111,8 +119,8 @@ const Profile: React.FC = () => {
          </div>
          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full border-[6px] border-[#97bc3a] shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-colors">
-                 <span className="text-6xl">{isEditingDev ? devImage : devProfile.image}</span>
+              <div className="w-32 h-32 rounded-full border-[6px] border-[#97bc3a] shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-colors overflow-hidden">
+                 <span className="text-6xl select-none">{isEditingDev ? devImage : getSafeAvatar(devProfile.image)}</span>
               </div>
               {isEditingDev && (
                 <button 
@@ -205,8 +213,8 @@ const Profile: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
-              <div className="w-16 h-16 rounded-2xl border-2 border-slate-50 dark:border-slate-800 shadow-md flex items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors">
-                <span className="text-3xl">{isEditingUser ? userAvatar : (currentUser?.avatar || '👤')}</span>
+              <div className="w-16 h-16 rounded-2xl border-2 border-slate-50 dark:border-slate-800 shadow-md flex items-center justify-center bg-slate-50 dark:bg-slate-800 transition-colors overflow-hidden">
+                <span className="text-3xl select-none">{isEditingUser ? userAvatar : getSafeAvatar(currentUser?.avatar)}</span>
               </div>
               {isEditingUser && (
                 <button 
