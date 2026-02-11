@@ -311,14 +311,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const sendFeedback = async (content: string, threadId: string) => {
     if (!currentUser) return;
-    await addDoc(collection(db, 'feedback'), {
-      senderId: currentUser.id,
-      senderName: currentUser.name,
-      senderAvatar: currentUser.avatar,
-      content,
-      timestamp: new Date().toISOString(),
-      threadId
-    });
+    try {
+      await addDoc(collection(db, 'feedback'), {
+        senderId: currentUser.id,
+        senderName: currentUser.name,
+        senderAvatar: currentUser.avatar || '👤',
+        content: content.trim(),
+        timestamp: new Date().toISOString(),
+        threadId: threadId
+      });
+    } catch (error) {
+      console.error("Firestore sendFeedback error:", error);
+      throw error;
+    }
   };
 
   const updateUser = async (uid: string, data: Partial<User>) => {

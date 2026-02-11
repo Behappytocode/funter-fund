@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
-import { Send, MessageSquare, User, Shield, Inbox, Clock, ChevronLeft } from 'lucide-react';
+import { Send, MessageSquare, User, Shield, Inbox, Clock, ChevronLeft, Loader2, AlertCircle } from 'lucide-react';
 
 const Feedback: React.FC = () => {
   const { currentUser, feedbackMessages, users, sendFeedback } = useApp();
   const [message, setMessage] = useState('');
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -16,17 +18,30 @@ const Feedback: React.FC = () => {
     }
   }, [feedbackMessages, selectedThreadId]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim() || !currentUser) return;
+  const handleSend = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!message.trim() || !currentUser || isSending) return;
 
     // For members, the threadId is always their own ID.
     // For admins, the threadId is the ID of the member they are replying to.
     const threadId = currentUser.role === UserRole.ADMIN ? selectedThreadId : currentUser.id;
     
-    if (threadId) {
+    if (!threadId) {
+      setError("Unable to identify chat thread.");
+      return;
+    }
+
+    setIsSending(true);
+    setError(null);
+
+    try {
       await sendFeedback(message, threadId);
       setMessage('');
+    } catch (err: any) {
+      console.error("Feedback send failed:", err);
+      setError("Failed to send message. Please check your connection.");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -97,8 +112,8 @@ const Feedback: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-180px)] animate-in fade-in duration-500">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="flex flex-col h-[calc(100vh-190px)] animate-in fade-in duration-500">
+      <div className="flex items-center gap-4 mb-4">
         {currentUser?.role === UserRole.ADMIN && (
           <button 
             onClick={() => setSelectedThreadId(null)}
@@ -108,10 +123,10 @@ const Feedback: React.FC = () => {
           </button>
         )}
         <div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
             {currentUser?.role === UserRole.ADMIN ? 'Member Support' : 'Support Desk'}
           </h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">
             {currentUser?.role === UserRole.ADMIN 
               ? `Chatting with ${users.find(u => u.id === selectedThreadId)?.name}` 
               : 'Direct line to our administration team.'}
@@ -119,10 +134,17 @@ const Feedback: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-2xl flex items-center gap-2 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-tight">
+          <AlertCircle size={14} />
+          {error}
+        </div>
+      )}
+
       {/* Chat Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-4 px-2 no-scrollbar mb-6"
+        className="flex-1 overflow-y-auto space-y-4 px-2 no-scrollbar mb-4 bg-slate-50/30 dark:bg-slate-900/10 rounded-3xl"
       >
         {currentThreadMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full opacity-30 grayscale">
@@ -143,7 +165,7 @@ const Feedback: React.FC = () => {
                       <span className="text-sm">{getSafeAvatar(msg.senderAvatar)}</span>
                     </div>
                   )}
-                  <div className={`p-4 rounded-[28px] text-[11px] font-medium leading-relaxed shadow-sm ${
+                  <div className={`p-4 rounded-[24px] sm:rounded-[28px] text-[11px] font-medium leading-relaxed shadow-sm ${
                     isMe 
                       ? 'bg-indigo-600 text-white rounded-br-lg' 
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-bl-lg border border-slate-100 dark:border-slate-800'
@@ -151,7 +173,7 @@ const Feedback: React.FC = () => {
                     {msg.content}
                   </div>
                 </div>
-                <div className={`mt-1.5 flex items-center gap-1 text-[7px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-600 ${isMe ? 'mr-2' : 'ml-12'}`}>
+                <div className={`mt-1 flex items-center gap-1 text-[7px] font-black uppercase tracking-widest text-slate-300 dark:text-slate-600 ${isMe ? 'mr-2' : 'ml-10'}`}>
                   <Clock size={8} /> {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -161,26 +183,37 @@ const Feedback: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="bg-white dark:bg-slate-900 p-2 rounded-full border border-slate-100 dark:border-slate-800 flex items-center gap-2 shadow-xl mb-4">
-        <input 
-          type="text" 
-          placeholder="Type your feedback..." 
-          className="flex-1 bg-transparent border-none outline-none px-6 py-3 text-xs font-medium dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button 
-          type="submit"
-          className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-100 dark:shadow-none"
+      <div className="relative group">
+        <form 
+          onSubmit={handleSend} 
+          className="bg-white dark:bg-slate-900 p-1.5 sm:p-2 rounded-full border border-slate-100 dark:border-slate-800 flex items-center gap-2 shadow-xl mb-2 transition-all focus-within:ring-4 focus-within:ring-indigo-50 dark:focus-within:ring-indigo-950/20"
         >
-          <Send size={18} />
-        </button>
-      </form>
+          <input 
+            type="text" 
+            placeholder="Type your message..." 
+            className="flex-1 bg-transparent border-none outline-none px-5 py-3 text-xs font-medium dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={isSending}
+            autoFocus
+          />
+          <button 
+            type="submit"
+            onClick={() => handleSend()}
+            disabled={!message.trim() || isSending}
+            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95 disabled:opacity-50 ${
+              isSending ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+          >
+            {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          </button>
+        </form>
+      </div>
       
       {/* Disclaimer */}
-      <div className="px-6 py-2 flex items-center justify-center gap-2 text-center">
-        <Shield size={10} className="text-slate-300 dark:text-slate-600" />
-        <p className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">Secure private channel with administration</p>
+      <div className="px-6 py-1 flex items-center justify-center gap-2 text-center">
+        <Shield size={9} className="text-slate-300 dark:text-slate-600" />
+        <p className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">End-to-End Secure Channel</p>
       </div>
     </div>
   );
