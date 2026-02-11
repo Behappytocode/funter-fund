@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Landmark, Wallet, User as UserIcon, ShieldAlert, Inbox, Code, LogOut, Sun, Moon } from 'lucide-react';
+import { Home, Landmark, Wallet, User as UserIcon, ShieldAlert, Inbox, Code, LogOut, Sun, Moon, Users } from 'lucide-react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
 
@@ -16,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { id: 'dashboard', icon: Home, label: 'HOME' },
     { id: 'deposits', icon: Wallet, label: 'DEPOSITS' },
     { id: 'loans', icon: Landmark, label: 'LOANS' },
+    { id: 'circle', icon: Users, label: 'CIRCLE' },
   ];
 
   if (currentUser?.role === UserRole.ADMIN) {

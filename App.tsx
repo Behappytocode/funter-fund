@@ -7,6 +7,7 @@ import Deposits from './components/Deposits';
 import Loans from './components/Loans';
 import Profile from './components/Profile';
 import AdminPanel from './components/AdminPanel';
+import Circle from './components/Circle';
 import { Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
@@ -225,6 +226,7 @@ const MainApp: React.FC = () => {
       {activeTab === 'dashboard' && <Dashboard />}
       {activeTab === 'deposits' && <Deposits />}
       {activeTab === 'loans' && <Loans />}
+      {activeTab === 'circle' && <Circle />}
       {activeTab === 'admin' && <AdminPanel />}
       {activeTab === 'profile' && <Profile />}
     </Layout>
