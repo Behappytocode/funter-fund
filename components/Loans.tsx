@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../state';
 import { UserRole, LoanStatus } from '../types';
-import { Landmark, Plus, Info, ChevronRight, CheckCircle2, Clock, Search, Download } from 'lucide-react';
+import { Landmark, Plus, ChevronRight, CheckCircle2, Clock, Search, Download, Calendar, DollarSign, Users, AlertCircle } from 'lucide-react';
 
 const Loans: React.FC = () => {
   const { loans, currentUser, users, issueLoan, payInstallment } = useApp();
@@ -10,6 +9,8 @@ const Loans: React.FC = () => {
   const [selectedLoan, setSelectedLoan] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'COMPLETED'>('ACTIVE');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Form State
   const [memberId, setMemberId] = useState('');
@@ -23,20 +24,45 @@ const Loans: React.FC = () => {
     .filter(l => l.status === (activeTab === 'ACTIVE' ? LoanStatus.ACTIVE : LoanStatus.COMPLETED))
     .filter(l => l.memberName.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const member = users.find(u => u.id === memberId);
-    if (!member) return;
+    setError(null);
+    
+    if (!memberId) {
+      setError("Please select a member");
+      return;
+    }
 
-    issueLoan({
-      memberId: member.id,
-      memberName: member.name,
-      totalAmount: parseFloat(amount),
-      durationMonths: parseInt(duration),
-      startDate
-    });
-    setIsAdding(false);
-    resetForm();
+    const member = users.find(u => u.id === memberId);
+    if (!member) {
+      setError("Selected member not found");
+      return;
+    }
+
+    const loanAmount = parseFloat(amount);
+    if (isNaN(loanAmount) || loanAmount <= 0) {
+      setError("Please enter a valid amount");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await issueLoan({
+        memberId: member.id,
+        memberName: member.name,
+        totalAmount: loanAmount,
+        durationMonths: parseInt(duration),
+        startDate
+      });
+      setIsAdding(false);
+      resetForm();
+      alert("Loan successfully issued!");
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to issue loan. Check your permissions.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -44,23 +70,27 @@ const Loans: React.FC = () => {
     setAmount('');
     setDuration('6');
     setStartDate(new Date().toISOString().split('T')[0]);
+    setError(null);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Loan Engine</h2>
-          <p className="text-xs text-slate-400 font-medium">Automated 70/30 split management.</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight transition-colors">Loan Engine</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Automated 70/30 split management.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2.5 text-slate-400 hover:text-indigo-600 bg-white border border-slate-100 rounded-xl transition-colors">
+          <button className="p-2.5 text-slate-400 dark:text-slate-600 hover:text-indigo-600 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl transition-colors">
             <Download size={18} />
           </button>
           {currentUser?.role === UserRole.ADMIN && (
             <button 
-              onClick={() => setIsAdding(true)}
-              className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-indigo-100 hover:scale-105 transition-transform"
+              onClick={() => {
+                resetForm();
+                setIsAdding(true);
+              }}
+              className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 transition-transform"
             >
               <Plus size={18} />
               <span className="text-xs tracking-tight">New Loan</span>
@@ -70,16 +100,16 @@ const Loans: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+      <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl transition-colors">
         <button 
           onClick={() => setActiveTab('ACTIVE')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${activeTab === 'ACTIVE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${activeTab === 'ACTIVE' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           ACTIVE
         </button>
         <button 
           onClick={() => setActiveTab('COMPLETED')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${activeTab === 'COMPLETED' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 uppercase'}`}
+          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${activeTab === 'COMPLETED' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           COMPLETED
         </button>
@@ -87,11 +117,11 @@ const Loans: React.FC = () => {
 
       {/* Search Bar */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={16} />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors" size={16} />
         <input 
           type="text" 
           placeholder="Search member..." 
-          className="w-full pl-11 pr-6 py-3.5 bg-white border border-slate-100 rounded-[24px] text-xs font-medium focus:ring-4 focus:ring-indigo-50 focus:outline-none shadow-sm placeholder:text-slate-300"
+          className="w-full pl-11 pr-6 py-3.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[24px] text-xs font-medium focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 focus:outline-none shadow-sm dark:shadow-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-slate-200 transition-colors"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -102,15 +132,15 @@ const Loans: React.FC = () => {
           <div 
             key={l.id} 
             onClick={() => setSelectedLoan(l.id)}
-            className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group cursor-pointer active:scale-98 transition-all hover:border-indigo-100"
+            className="bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm dark:shadow-none relative group cursor-pointer active:scale-98 transition-all hover:border-indigo-100 dark:hover:border-indigo-900"
           >
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">{l.memberName}</h4>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">ID: {l.id.toUpperCase()}</p>
+                <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{l.memberName}</h4>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">ID: {l.id.toUpperCase()}</p>
               </div>
               <span className={`text-[8px] px-3 py-1.5 rounded-full font-black tracking-widest uppercase ${
-                l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'
+                l.status === LoanStatus.ACTIVE ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
               }`}>
                 {l.status}
               </span>
@@ -118,105 +148,215 @@ const Loans: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-8 mb-6">
               <div>
-                <p className="text-[9px] text-slate-400 font-black uppercase mb-1">Issued Total</p>
-                <p className="text-sm font-black text-slate-700">Rs. {l.totalAmount.toLocaleString()}</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">Issued Total</p>
+                <p className="text-sm font-black text-slate-700 dark:text-slate-300">Rs. {l.totalAmount.toLocaleString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] text-slate-400 font-black uppercase mb-1">Debt (70%)</p>
-                <p className="text-sm font-black text-slate-700">Rs. {l.recoverableAmount.toLocaleString()}</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">Debt (70%)</p>
+                <p className="text-sm font-black text-slate-700 dark:text-slate-300">Rs. {l.recoverableAmount.toLocaleString()}</p>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                <span className="text-slate-400">Recovery Status</span>
-                <span className="text-indigo-600">{Math.round(((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100)}%</span>
+                <span className="text-slate-400 dark:text-slate-500">Recovery Status</span>
+                <span className="text-indigo-600 dark:text-indigo-400">{Math.round(((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100)}%</span>
               </div>
-              <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-indigo-600 transition-all duration-700 rounded-full" 
+                  className="h-full bg-indigo-600 dark:bg-indigo-500 transition-all duration-700 rounded-full" 
                   style={{ width: `${((l.recoverableAmount - l.remainingBalance) / l.recoverableAmount) * 100}%` }}
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-between text-[9px] font-black text-slate-400 border-t border-slate-50 pt-4 uppercase tracking-widest">
-              <span>Remaining: <span className="text-slate-800">Rs. {l.remainingBalance.toLocaleString()}</span></span>
-              <div className="flex items-center gap-1 text-indigo-600">
+            <div className="mt-6 flex items-center justify-between text-[9px] font-black text-slate-400 dark:text-slate-500 border-t border-slate-50 dark:border-slate-800 pt-4 uppercase tracking-widest">
+              <span>Remaining: <span className="text-slate-800 dark:text-slate-200">Rs. {l.remainingBalance.toLocaleString()}</span></span>
+              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
                 Details <ChevronRight size={12} />
               </div>
             </div>
           </div>
         ))}
         {filteredLoans.length === 0 && (
-          <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-slate-100 flex flex-col items-center justify-center grayscale opacity-40">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-               <Landmark size={32} className="text-slate-300" />
+          <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-[40px] border border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center grayscale opacity-40">
+            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+               <Landmark size={32} className="text-slate-300 dark:text-slate-700" />
             </div>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">No Active Records.</p>
+            <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">No Active Records.</p>
           </div>
         )}
       </div>
 
-      {/* Amortization Drawer & Modal remains functionally same as previous version but styled more elegantly */}
+      {/* New Loan Modal */}
+      {isAdding && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl transition-all">
+            <div className="bg-indigo-600 p-8 text-white relative">
+              <h3 className="text-xl font-black">Issue New Loan</h3>
+              <p className="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-70">Automated 70/30 Recovery Split</p>
+              <button 
+                onClick={() => setIsAdding(false)} 
+                className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors p-2"
+              >✕</button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
+              {error && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-2xl flex items-center gap-3 text-rose-600 dark:text-rose-400 text-xs font-bold">
+                  <AlertCircle size={16} /> {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Select Member</label>
+                <div className="relative">
+                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                  <select 
+                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors appearance-none"
+                    required
+                    value={memberId}
+                    onChange={(e) => setMemberId(e.target.value)}
+                  >
+                    <option value="">CHOOSE A MEMBER</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id} className="dark:bg-slate-900">{u.name.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Total Amount (Rs.)</label>
+                <div className="relative">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                  <input 
+                    type="number" 
+                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors"
+                    placeholder="50000"
+                    required
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Duration (Months)</label>
+                  <select 
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors appearance-none"
+                    required
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  >
+                    {['3', '6', '12', '18', '24'].map(m => (
+                      <option key={m} value={m} className="dark:bg-slate-900">{m} MONTHS</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Start Date</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                    <input 
+                      type="date" 
+                      className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors"
+                      required
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
+                <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-indigo-400">
+                  <span>70% Recoverable</span>
+                  <span>30% Waiver</span>
+                </div>
+                <div className="flex justify-between items-center text-xs font-black text-indigo-700 dark:text-indigo-300 mt-1">
+                  <span>Rs. {amount ? (parseFloat(amount) * 0.7).toLocaleString() : '0'}</span>
+                  <span>Rs. {amount ? (parseFloat(amount) * 0.3).toLocaleString() : '0'}</span>
+                </div>
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
+              >
+                {isSubmitting ? 'Processing...' : 'Approve & Issue'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Amortization Drawer & Modal */}
       {selectedLoan && activeLoanData && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-[48px] max-h-[90vh] overflow-y-auto slide-in-from-bottom duration-300 shadow-2xl">
-             <div className="sticky top-0 bg-white p-8 pb-4 z-10 border-b border-slate-50">
-                <div className="w-12 h-1 bg-slate-100 rounded-full mx-auto mb-8" />
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm">
+          <div className="absolute inset-x-0 bottom-0 bg-white dark:bg-slate-900 rounded-t-[48px] max-h-[90vh] overflow-y-auto shadow-2xl transition-all">
+             <div className="sticky top-0 bg-white dark:bg-slate-900 p-8 pb-4 z-10 border-b border-slate-50 dark:border-slate-800 transition-colors">
+                <div className="w-12 h-1 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-8" />
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{activeLoanData.memberName}</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Loan Repayment Schedule</p>
+                    <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{activeLoanData.memberName}</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-1">Loan Repayment Schedule</p>
                   </div>
-                  <button onClick={() => setSelectedLoan(null)} className="bg-slate-50 p-3 rounded-2xl text-slate-400 hover:text-slate-800 transition-colors">✕</button>
+                  <button onClick={() => setSelectedLoan(null)} className="bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">✕</button>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-3 mt-8">
-                  <div className="bg-indigo-50 p-4 rounded-3xl text-center border border-indigo-100">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-3xl text-center border border-indigo-100 dark:border-indigo-900/50">
                     <p className="text-[8px] font-black text-indigo-300 uppercase mb-1">Total</p>
-                    <p className="text-xs font-black text-indigo-700">Rs. {activeLoanData.totalAmount.toLocaleString()}</p>
+                    <p className="text-xs font-black text-indigo-700 dark:text-indigo-400">Rs. {activeLoanData.totalAmount.toLocaleString()}</p>
                   </div>
-                  <div className="bg-emerald-50 p-4 rounded-3xl text-center border border-emerald-100">
+                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-3xl text-center border border-emerald-100 dark:border-emerald-900/50">
                     <p className="text-[8px] font-black text-emerald-300 uppercase mb-1">Waiver</p>
-                    <p className="text-xs font-black text-emerald-700">Rs. {activeLoanData.waiverAmount.toLocaleString()}</p>
+                    <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">Rs. {activeLoanData.waiverAmount.toLocaleString()}</p>
                   </div>
-                  <div className="bg-amber-50 p-4 rounded-3xl text-center border border-amber-100">
+                  <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-3xl text-center border border-amber-100 dark:border-amber-900/50">
                     <p className="text-[8px] font-black text-amber-300 uppercase mb-1">Recover</p>
-                    <p className="text-xs font-black text-amber-700">Rs. {activeLoanData.recoverableAmount.toLocaleString()}</p>
+                    <p className="text-xs font-black text-amber-700 dark:text-amber-400">Rs. {activeLoanData.recoverableAmount.toLocaleString()}</p>
                   </div>
                 </div>
              </div>
 
              <div className="p-8 pb-24 space-y-6">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Installment Timeline</h4>
+                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Installment Timeline</h4>
                 {activeLoanData.installments.map((inst, idx) => (
                   <div key={inst.id} className="flex gap-6 items-start">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-2xl flex items-center justify-center border-2 shadow-sm transition-all duration-500 ${inst.status === 'PAID' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-300'}`}>
+                      <div className={`w-8 h-8 rounded-2xl flex items-center justify-center border-2 shadow-sm transition-all duration-500 ${inst.status === 'PAID' ? 'bg-indigo-600 dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500 text-white' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-300 dark:text-slate-600'}`}>
                         {inst.status === 'PAID' ? <CheckCircle2 size={14} /> : <span className="text-xs font-black">{idx + 1}</span>}
                       </div>
-                      {idx < activeLoanData.installments.length - 1 && <div className="w-0.5 h-16 bg-slate-100 my-1" />}
+                      {idx < activeLoanData.installments.length - 1 && <div className="w-0.5 h-16 bg-slate-100 dark:bg-slate-800 my-1" />}
                     </div>
-                    <div className="flex-1 bg-white border border-slate-100 p-5 rounded-[28px] shadow-sm flex justify-between items-center group hover:border-indigo-100 transition-colors">
+                    <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-[28px] shadow-sm dark:shadow-none flex justify-between items-center group hover:border-indigo-100 dark:hover:border-indigo-900 transition-colors">
                       <div>
-                        <p className="text-sm font-black text-slate-800 tracking-tight">Rs. {inst.amount.toLocaleString()}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">DUE: {inst.dueDate}</p>
+                        <p className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">Rs. {inst.amount.toLocaleString()}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1">DUE: {inst.dueDate}</p>
                       </div>
                       {inst.status === 'PAID' ? (
-                        <div className="text-[9px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full">
+                        <div className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 rounded-full">
                           <CheckCircle2 size={10} /> Paid
                         </div>
                       ) : (
                         currentUser?.role === UserRole.ADMIN ? (
                           <button 
-                            onClick={() => payInstallment(activeLoanData.id, inst.id)}
-                            className="text-[9px] font-black bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all uppercase tracking-widest"
+                            disabled={isSubmitting}
+                            onClick={async () => {
+                              setIsSubmitting(true);
+                              try {
+                                await payInstallment(activeLoanData.id, inst.id);
+                              } catch(e) {
+                                alert("Failed to mark as paid");
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }}
+                            className="text-[9px] font-black bg-indigo-600 text-white px-5 py-2.5 rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 transition-all uppercase tracking-widest disabled:opacity-50"
                           >
                             Mark Paid
                           </button>
                         ) : (
-                          <div className="text-[9px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full">
+                          <div className="text-[9px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full">
                             <Clock size={10} /> Pending
                           </div>
                         )
