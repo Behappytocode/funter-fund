@@ -110,25 +110,29 @@ const Profile: React.FC = () => {
         />
       )}
       
-      {/* Dev Header - Mesh Gradient Redesign */}
-      <div className="w-full bg-slate-900 h-52 rounded-t-[48px] relative transition-all shadow-2xl overflow-hidden group">
-         {/* Animated Mesh Gradient */}
-         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900">
-            <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-indigo-600/20 blur-[100px] rounded-full animate-pulse" />
-            <div className="absolute bottom-0 -right-1/4 w-1/2 h-1/2 bg-emerald-600/10 blur-[100px] rounded-full animate-pulse delay-700" />
+      {/* Dev Header - Modern Mesh Gradient Container */}
+      <div className="w-full h-52 relative transition-all group">
+         {/* Background Layer with Overflow Hidden to clip effects but not the avatar */}
+         <div className="absolute inset-0 rounded-t-[48px] overflow-hidden bg-slate-900 shadow-2xl">
+            {/* Animated Mesh Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900">
+               <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-indigo-600/20 blur-[100px] rounded-full animate-pulse" />
+               <div className="absolute bottom-0 -right-1/4 w-1/2 h-1/2 bg-emerald-600/10 blur-[100px] rounded-full animate-pulse delay-700" />
+            </div>
+            
+            {/* Grid Pattern Overlay */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                 style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
          </div>
-         
-         {/* Grid Pattern Overlay */}
-         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-              style={{ backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`, backgroundSize: '24px 24px' }} />
 
-         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
+         {/* Floating Avatar Section - Now fully visible outside header bounds */}
+         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-20">
             <div className="relative">
               {/* Pulsing Outer Ring */}
               <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping -z-10 scale-110" />
               
               <div className="w-36 h-36 rounded-full border-[8px] border-slate-50 dark:border-slate-950 shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-all overflow-hidden relative group">
-                 <span className="text-7xl select-none transition-transform group-hover:scale-110 duration-500">
+                 <span className="text-7xl select-none transition-transform group-hover:scale-110 duration-500 leading-none flex items-center justify-center">
                    {isEditingDev ? devImage : getSafeAvatar(devProfile.image)}
                  </span>
                  
