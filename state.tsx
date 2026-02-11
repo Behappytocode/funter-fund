@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Deposit, Loan, FinancialSummary, UserRole, UserStatus, DevProfile, LoanStatus, Installment } from './types';
+import { User, Deposit, Loan, FinancialSummary, UserRole, UserStatus, DevProfile, LoanStatus, Installment, FeedbackMessage } from './types';
 import { auth, db, googleProvider } from './firebase';
 import { 
   signInWithPopup, 
@@ -51,6 +51,7 @@ interface AppState {
   users: User[];
   deposits: Deposit[];
   loans: Loan[];
+  feedbackMessages: FeedbackMessage[];
   devProfile: DevProfile;
   summary: FinancialSummary;
   loading: boolean;
@@ -66,6 +67,7 @@ interface AppState {
   approveLoan: (loanId: string) => Promise<void>;
   rejectLoan: (loanId: string) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
+  sendFeedback: (content: string, threadId: string) => Promise<void>;
   updateUser: (uid: string, data: Partial<User>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
   approveUser: (uid: string) => Promise<void>;
@@ -79,6 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [users, setUsers] = useState<User[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessage[]>([]);
   const [devProfile, setDevProfile] = useState<DevProfile>(INITIAL_DEV_PROFILE);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<Theme>(() => {
@@ -146,6 +149,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
     });
 
+    const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('timestamp', 'asc')), (snap) => {
+      setFeedbackMessages(snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage)));
+    });
+
     const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {
       if (docSnap.exists()) {
         setDevProfile(docSnap.data() as DevProfile);
@@ -156,6 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubUsers();
       unsubDeposits();
       unsubLoans();
+      unsubFeedback();
       unsubDev();
     };
   }, [currentUser?.id]);
@@ -301,6 +309,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const sendFeedback = async (content: string, threadId: string) => {
+    if (!currentUser) return;
+    await addDoc(collection(db, 'feedback'), {
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderAvatar: currentUser.avatar,
+      content,
+      timestamp: new Date().toISOString(),
+      threadId
+    });
+  };
+
   const updateUser = async (uid: string, data: Partial<User>) => {
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, data);
@@ -323,9 +343,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      currentUser, users, deposits, loans, devProfile, summary, loading, theme, toggleTheme,
+      currentUser, users, deposits, loans, feedbackMessages, devProfile, summary, loading, theme, toggleTheme,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
-      addDeposit, deleteDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, deleteUser, approveUser, updateDevProfile
+      addDeposit, deleteDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, sendFeedback, updateUser, deleteUser, approveUser, updateDevProfile
     }}>
       {children}
     </AppContext.Provider>

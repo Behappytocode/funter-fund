@@ -60,6 +60,16 @@ export interface Loan {
   installments: Installment[];
 }
 
+export interface FeedbackMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  content: string;
+  timestamp: string;
+  threadId: string; // Grouped by Member ID
+}
+
 export interface DevProfile {
   name: string;
   title: string;
