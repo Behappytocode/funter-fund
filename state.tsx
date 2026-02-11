@@ -19,7 +19,8 @@ import {
   updateDoc, 
   deleteDoc,
   query, 
-  orderBy 
+  orderBy,
+  where
 } from 'firebase/firestore';
 import { INITIAL_DEV_PROFILE } from './mockData';
 
@@ -134,30 +135,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!currentUser) return;
 
+    // Users listener: Members can often only read themselves if rules are strict. 
+    // We try to read all for the Circle, but catch errors.
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const usersList = snap.docs.map(d => d.data() as User);
       setUsers(usersList);
       const updatedSelf = usersList.find(u => u.id === currentUser.id);
       if (updatedSelf) setCurrentUser(updatedSelf);
-    });
+    }, (err) => console.warn("Users listener permission issues:", err.message));
 
-    const unsubDeposits = onSnapshot(query(collection(db, 'deposits'), orderBy('paymentDate', 'desc')), (snap) => {
+    // Deposits listener: If Member, only listen to own deposits
+    const depositsBaseQuery = collection(db, 'deposits');
+    const depositsFilteredQuery = currentUser.role === UserRole.ADMIN 
+      ? query(depositsBaseQuery, orderBy('paymentDate', 'desc'))
+      : query(depositsBaseQuery, where('memberId', '==', currentUser.id), orderBy('paymentDate', 'desc'));
+
+    const unsubDeposits = onSnapshot(depositsFilteredQuery, (snap) => {
       setDeposits(snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit)));
-    });
+    }, (err) => console.warn("Deposits listener permission issues:", err.message));
 
-    const unsubLoans = onSnapshot(collection(db, 'loans'), (snap) => {
+    // Loans listener: If Member, only listen to own loans
+    const loansBaseQuery = collection(db, 'loans');
+    const loansFilteredQuery = currentUser.role === UserRole.ADMIN 
+      ? loansBaseQuery
+      : query(loansBaseQuery, where('memberId', '==', currentUser.id));
+
+    const unsubLoans = onSnapshot(loansFilteredQuery, (snap) => {
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
-    });
+    }, (err) => console.warn("Loans listener permission issues:", err.message));
 
-    const unsubFeedback = onSnapshot(query(collection(db, 'feedback'), orderBy('timestamp', 'asc')), (snap) => {
+    // Feedback listener: Filter by threadId (which is the member's ID)
+    const feedbackBaseQuery = collection(db, 'feedback');
+    const feedbackFilteredQuery = currentUser.role === UserRole.ADMIN
+      ? query(feedbackBaseQuery, orderBy('timestamp', 'asc'))
+      : query(feedbackBaseQuery, where('threadId', '==', currentUser.id), orderBy('timestamp', 'asc'));
+
+    const unsubFeedback = onSnapshot(feedbackFilteredQuery, (snap) => {
       setFeedbackMessages(snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage)));
-    });
+    }, (err) => console.warn("Feedback listener permission issues:", err.message));
 
     const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {
       if (docSnap.exists()) {
         setDevProfile(docSnap.data() as DevProfile);
       }
-    });
+    }, (err) => console.warn("DevProfile listener permission issues:", err.message));
 
     return () => {
       unsubUsers();
@@ -166,7 +187,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubFeedback();
       unsubDev();
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.role]);
 
   const summary: FinancialSummary = (() => {
     const activeLoans = loans.filter(l => l.status !== LoanStatus.PENDING);
@@ -245,8 +266,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const issueLoan = async (params: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>, initialStatus: LoanStatus = LoanStatus.ACTIVE) => {
-    const recoverableAmount = params.totalAmount * 0.7;
-    const waiverAmount = params.totalAmount * 0.3;
+    const recoverableAmount = Number(params.totalAmount) * 0.7;
+    const waiverAmount = Number(params.totalAmount) * 0.3;
     const duration = Number(params.durationMonths);
     const installmentAmount = Math.ceil(recoverableAmount / duration);
     
@@ -262,14 +283,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
-    await addDoc(collection(db, 'loans'), {
-      ...params,
-      recoverableAmount,
-      waiverAmount,
-      remainingBalance: recoverableAmount,
-      status: initialStatus,
-      installments
-    });
+    try {
+      await addDoc(collection(db, 'loans'), {
+        memberId: params.memberId,
+        memberName: params.memberName,
+        totalAmount: Number(params.totalAmount),
+        durationMonths: Number(params.durationMonths),
+        startDate: params.startDate,
+        recoverableAmount,
+        waiverAmount,
+        remainingBalance: recoverableAmount,
+        status: initialStatus,
+        installments,
+        requestedBy: auth.currentUser?.uid || params.memberId,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Firestore issueLoan error:", error);
+      throw error;
+    }
   };
 
   const approveLoan = async (loanId: string) => {
