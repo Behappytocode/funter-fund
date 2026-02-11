@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
-import { Plus, Search, Camera, Eye, Landmark } from 'lucide-react';
+import { Plus, Search, Camera, Eye, Landmark, Trash2 } from 'lucide-react';
 
 const Deposits: React.FC = () => {
-  const { deposits, currentUser, users, addDeposit } = useApp();
+  const { deposits, currentUser, users, addDeposit, deleteDeposit } = useApp();
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -33,6 +33,16 @@ const Deposits: React.FC = () => {
     });
     setIsAdding(false);
     resetForm();
+  };
+
+  const handleDelete = async (id: string, name: string, amount: number) => {
+    if (confirm(`Are you sure you want to delete the deposit of Rs. ${amount.toLocaleString()} for ${name}? This action cannot be undone.`)) {
+      try {
+        await deleteDeposit(id);
+      } catch (err) {
+        alert("Failed to delete deposit.");
+      }
+    }
   };
 
   const resetForm = () => {
@@ -72,15 +82,15 @@ const Deposits: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
-        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-b border-slate-100 dark:border-slate-800 grid grid-cols-4 gap-4">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-b border-slate-100 dark:border-slate-800 grid grid-cols-5 gap-4">
           <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest col-span-2">Member & Details</span>
           <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Amount</span>
-          <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Actions</span>
+          <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right col-span-2">Actions</span>
         </div>
 
         <div className="divide-y divide-slate-50 dark:divide-slate-800">
           {filteredDeposits.map((d) => (
-            <div key={d.id} className="px-6 py-5 grid grid-cols-4 gap-4 items-center group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+            <div key={d.id} className="px-6 py-5 grid grid-cols-5 gap-4 items-center group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
               <div className="col-span-2 flex items-center gap-4">
                 <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-xs shrink-0 uppercase transition-colors">
                   {d.memberName.charAt(0)}
@@ -97,15 +107,23 @@ const Deposits: React.FC = () => {
               <div className="text-center">
                 <p className="text-xs font-black text-slate-700 dark:text-slate-300 tracking-tight transition-colors">Rs. {d.amount.toLocaleString()}</p>
               </div>
-              <div className="text-right">
+              <div className="text-right col-span-2 flex justify-end gap-1">
                 <button className="p-2 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                   <Eye size={16} />
                 </button>
+                {currentUser?.role === UserRole.ADMIN && (
+                  <button 
+                    onClick={() => handleDelete(d.id, d.memberName, d.amount)}
+                    className="p-2 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
           {filteredDeposits.length === 0 && (
-            <div className="text-center py-20">
+            <div className="text-center py-20 col-span-5">
               <Landmark size={48} className="mx-auto text-slate-100 dark:text-slate-800 mb-4" />
               <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-widest">No records found.</p>
             </div>

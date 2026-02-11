@@ -40,11 +40,13 @@ interface AppState {
   signupWithEmail: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   addDeposit: (deposit: Omit<Deposit, 'id' | 'entryDate'>) => Promise<void>;
+  deleteDeposit: (depositId: string) => Promise<void>;
   issueLoan: (loan: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>, initialStatus?: LoanStatus) => Promise<void>;
   approveLoan: (loanId: string) => Promise<void>;
   rejectLoan: (loanId: string) => Promise<void>;
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
   updateUser: (uid: string, data: Partial<User>) => Promise<void>;
+  deleteUser: (uid: string) => Promise<void>;
   updateDevProfile: (data: Partial<DevProfile>) => Promise<void>;
 }
 
@@ -204,6 +206,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const deleteDeposit = async (depositId: string) => {
+    await deleteDoc(doc(db, 'deposits', depositId));
+  };
+
   const issueLoan = async (params: Omit<Loan, 'id' | 'status' | 'installments' | 'remainingBalance' | 'recoverableAmount' | 'waiverAmount'>, initialStatus: LoanStatus = LoanStatus.ACTIVE) => {
     const recoverableAmount = params.totalAmount * 0.7;
     const waiverAmount = params.totalAmount * 0.3;
@@ -274,6 +280,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateDoc(userRef, data);
   };
 
+  const deleteUser = async (uid: string) => {
+    await deleteDoc(doc(db, 'users', uid));
+  };
+
   const updateDevProfile = async (data: Partial<DevProfile>) => {
     const devRef = doc(db, 'settings', 'devProfile');
     await setDoc(devRef, { ...devProfile, ...data }, { merge: true });
@@ -283,7 +293,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       currentUser, users, deposits, loans, devProfile, summary, loading, theme, toggleTheme,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
-      addDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, updateDevProfile
+      addDeposit, deleteDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, deleteUser, updateDevProfile
     }}>
       {children}
     </AppContext.Provider>

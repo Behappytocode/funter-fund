@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../state';
-import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera } from 'lucide-react';
+import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera, Trash2 } from 'lucide-react';
 import { User } from '../types';
 
 const AdminPanel: React.FC = () => {
-  const { users, updateUser } = useApp();
+  const { users, updateUser, deleteUser, currentUser } = useApp();
   const [activeTab, setActiveTab] = useState<'MEMBERS' | 'DOCS'>('MEMBERS');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   
@@ -28,6 +28,21 @@ const AdminPanel: React.FC = () => {
       setEditingUserId(null);
     } catch (e) {
       console.error("Failed to update user", e);
+    }
+  };
+
+  const handleDeleteUser = async (id: string, name: string) => {
+    if (id === currentUser?.id) {
+      alert("You cannot remove yourself from the management console.");
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to remove ${name} from Funter Fund? This will delete their profile from the management console.`)) {
+      try {
+        await deleteUser(id);
+      } catch (err) {
+        alert("Failed to remove member.");
+      }
     }
   };
 
@@ -136,13 +151,22 @@ const AdminPanel: React.FC = () => {
                               {user.role}
                             </span>
                           </div>
-                          <button 
-                            onClick={() => startEditing(user)}
-                            className="p-2.5 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                            title="Edit User"
-                          >
-                            <Edit3 size={18} />
-                          </button>
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => startEditing(user)}
+                              className="p-2.5 text-slate-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                              title="Edit User"
+                            >
+                              <Edit3 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              className="p-2.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 transition-colors"
+                              title="Delete Member"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </>
                       )}
                     </div>
@@ -169,7 +193,7 @@ const AdminPanel: React.FC = () => {
                 </li>
                 <li className="flex gap-4">
                   <span className="w-6 h-6 rounded-full bg-slate-800 dark:bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">2</span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Modifications: Admins have exclusive rights to edit member details and oversee loan approvals.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Modifications: Admins have exclusive rights to edit member details, remove incorrect entries, and oversee directory membership.</p>
                 </li>
               </ul>
             </div>
