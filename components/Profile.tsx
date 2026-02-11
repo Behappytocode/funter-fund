@@ -131,8 +131,8 @@ const Profile: React.FC = () => {
               {/* Pulsing Outer Ring */}
               <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping -z-10 scale-110" />
               
-              <div className="w-36 h-36 rounded-full border-[8px] border-slate-50 dark:border-slate-950 shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-all overflow-hidden relative group">
-                 <span className="text-7xl select-none transition-transform group-hover:scale-110 duration-500 leading-none flex items-center justify-center">
+              <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border-[6px] sm:border-[8px] border-slate-50 dark:border-slate-950 shadow-2xl flex items-center justify-center bg-white dark:bg-slate-900 transition-all overflow-hidden relative group">
+                 <span className="text-6xl sm:text-7xl select-none transition-transform group-hover:scale-110 duration-500 leading-none flex items-center justify-center">
                    {isEditingDev ? devImage : getSafeAvatar(devProfile.image)}
                  </span>
                  
@@ -158,9 +158,9 @@ const Profile: React.FC = () => {
          </div>
       </div>
 
-      <div className="mt-20 w-full px-6 flex flex-col items-center text-center">
+      <div className="mt-20 w-full px-4 sm:px-6 flex flex-col items-center text-center">
         {isEditingDev ? (
-          <div className="w-full space-y-5 bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl mt-4 animate-in fade-in duration-500">
+          <div className="w-full space-y-5 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl mt-4 animate-in fade-in duration-500">
              <div className="space-y-1.5 text-left">
                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Identity</label>
                <input 
@@ -201,32 +201,32 @@ const Profile: React.FC = () => {
         ) : (
           <div className="space-y-10 w-full">
             <div className="space-y-2">
-              <h2 className="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tighter transition-colors uppercase italic">{devProfile.name}</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tighter transition-colors uppercase italic break-words">{devProfile.name}</h2>
               <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-900/50">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                <p className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.25em]">{devProfile.title}</p>
+                <p className="text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] sm:tracking-[0.25em]">{devProfile.title}</p>
               </div>
             </div>
 
             {/* Social Grid - Glassmorphism cards */}
-            <div className="grid grid-cols-3 gap-4 w-full px-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full px-2 sm:px-4">
               <a href="#" className="aspect-square bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:-translate-y-2 transition-all group">
-                <Github size={24} className="mb-2 transition-transform group-hover:scale-110" />
-                <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Github</span>
+                <Github size={20} className="sm:size-6 mb-2 transition-transform group-hover:scale-110" />
+                <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-40">Github</span>
               </a>
               <a href="#" className="aspect-square bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:-translate-y-2 transition-all group">
-                <Linkedin size={24} className="mb-2 transition-transform group-hover:scale-110" />
-                <span className="text-[8px] font-black uppercase tracking-widest opacity-40">LinkedIn</span>
+                <Linkedin size={20} className="sm:size-6 mb-2 transition-transform group-hover:scale-110" />
+                <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-40">LinkedIn</span>
               </a>
               <a href={`mailto:${devProfile.email}`} className="aspect-square bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:-translate-y-2 transition-all group">
-                <Mail size={24} className="mb-2 transition-transform group-hover:scale-110" />
-                <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Contact</span>
+                <Mail size={20} className="sm:size-6 mb-2 transition-transform group-hover:scale-110" />
+                <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-40">Contact</span>
               </a>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 relative transition-all">
-              <div className="absolute -top-3 left-8 bg-indigo-600 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">Architect's Note</div>
-              <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed text-center italic">
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-slate-100 dark:border-slate-800 relative transition-all">
+              <div className="absolute -top-3 left-6 sm:left-8 bg-indigo-600 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">Architect's Note</div>
+              <p className="text-xs sm:text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed text-center italic">
                 "{devProfile.bio}"
               </p>
             </div>
@@ -236,7 +236,7 @@ const Profile: React.FC = () => {
               <div className="flex flex-col items-center gap-3">
                 <button 
                   onClick={() => setIsEditingDev(true)} 
-                  className="bg-indigo-600 text-white px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-200 dark:shadow-none hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                  className="bg-indigo-600 text-white px-6 sm:px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-200 dark:shadow-none hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
                 >
                   <Edit3 size={16} /> Update Project Lead
                 </button>
@@ -248,21 +248,21 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Modernized Separator */}
-      <div className="w-full px-12 my-16 flex items-center gap-4">
+      <div className="w-full px-8 sm:px-12 my-12 sm:my-16 flex items-center gap-4">
         <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent flex-1" />
         <Code2 size={16} className="text-slate-300 dark:text-slate-700" />
         <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent flex-1" />
       </div>
 
-      {/* User Account Section - Modernized */}
-      <div className="w-full px-6 space-y-6">
+      {/* User Account Section - Mobile Optimized */}
+      <div className="w-full px-4 sm:px-6 space-y-6">
         <div className="flex items-center gap-3 mb-2 px-2">
           <Shield size={16} className="text-indigo-600 dark:text-indigo-400" />
           <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Authorized Session</h3>
         </div>
         
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-[48px] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/50 dark:shadow-none group transition-all">
-          <div className="flex items-center gap-6">
+        <div className="bg-white dark:bg-slate-900 p-5 sm:p-8 rounded-[32px] sm:rounded-[48px] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-100/50 dark:shadow-none group transition-all overflow-hidden">
+          <div className="flex flex-col xs:flex-row items-center xs:items-start gap-4 sm:gap-6">
             <div className="relative shrink-0">
               <div className="w-20 h-20 rounded-[28px] border-2 border-slate-50 dark:border-slate-800 shadow-lg flex items-center justify-center bg-slate-50 dark:bg-slate-800 transition-all overflow-hidden group-hover:scale-105">
                 <span className="text-4xl select-none">{isEditingUser ? userAvatar : getSafeAvatar(currentUser?.avatar)}</span>
@@ -278,7 +278,7 @@ const Profile: React.FC = () => {
             </div>
 
             {isEditingUser ? (
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 w-full space-y-3">
                 <input 
                   type="text" 
                   className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-100 transition-all"
@@ -291,16 +291,16 @@ const Profile: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex-1 min-w-0">
-                <h4 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight truncate uppercase leading-tight">{currentUser?.name}</h4>
-                <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 min-w-0 w-full text-center xs:text-left">
+                <h4 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight break-words uppercase leading-tight">{currentUser?.name}</h4>
+                <div className="flex flex-col xs:flex-row items-center gap-1 xs:gap-2 mt-2 xs:mt-1">
                   <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{currentUser?.role}</p>
-                  <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                  <span className="hidden xs:block w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Member since {currentUser?.joinedAt}</p>
                 </div>
                 <button 
                   onClick={() => setIsEditingUser(true)}
-                  className="mt-4 text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.2em] transition-colors flex items-center gap-2"
+                  className="mt-4 mx-auto xs:mx-0 text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.2em] transition-colors flex items-center justify-center xs:justify-start gap-2"
                 >
                   <Edit3 size={12} /> Customize Identity
                 </button>
@@ -311,14 +311,14 @@ const Profile: React.FC = () => {
 
         <button 
           onClick={() => logout()}
-          className="w-full bg-slate-900 dark:bg-slate-800 text-white font-black py-6 rounded-[32px] flex items-center justify-center gap-4 uppercase tracking-[0.25em] text-[10px] hover:bg-indigo-600 dark:hover:bg-indigo-700 active:scale-95 transition-all shadow-2xl shadow-indigo-100 dark:shadow-none mt-10"
+          className="w-full bg-slate-900 dark:bg-slate-800 text-white font-black py-5 sm:py-6 rounded-[28px] sm:rounded-[32px] flex items-center justify-center gap-4 uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[10px] hover:bg-indigo-600 dark:hover:bg-indigo-700 active:scale-95 transition-all shadow-2xl shadow-indigo-100 dark:shadow-none mt-10"
         >
           <LogOut size={20} /> End Secure Session
         </button>
       </div>
 
-      {/* Tech Stack - Modern Pill badges */}
-      <div className="mt-20 flex flex-wrap justify-center gap-2 px-10 mb-12">
+      {/* Tech Stack - Mobile Wrap Optimized */}
+      <div className="mt-16 sm:mt-20 flex flex-wrap justify-center gap-2 sm:gap-3 px-6 sm:px-10 mb-12">
         {[
           { icon: Cpu, name: 'Vite Core' },
           { icon: Code2, name: 'React 19' },
@@ -327,7 +327,7 @@ const Profile: React.FC = () => {
         ].map(tech => (
           <div key={tech.name} className="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:border-indigo-100 dark:hover:border-indigo-900">
             <tech.icon size={10} className="text-indigo-600 dark:text-indigo-400" />
-            <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            <span className="text-[8px] sm:text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap">
               {tech.name}
             </span>
           </div>
