@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp, EMOJI_CATEGORIES } from '../state';
-import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera, Trash2, Sparkles } from 'lucide-react';
-import { User } from '../types';
+import { History, BookOpen, ExternalLink, ShieldCheck, Database, Edit3, Save, X, Camera, Trash2, Sparkles, UserPlus, CheckCircle, XCircle } from 'lucide-react';
+import { User, UserStatus } from '../types';
 
 const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: () => void }> = ({ onSelect, onClose }) => {
   const [activeCat, setActiveCat] = useState(EMOJI_CATEGORIES[0].name);
@@ -48,8 +48,8 @@ const EmojiPickerModal: React.FC<{ onSelect: (emoji: string) => void; onClose: (
 };
 
 const AdminPanel: React.FC = () => {
-  const { users, updateUser, deleteUser, currentUser } = useApp();
-  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'DOCS'>('MEMBERS');
+  const { users, updateUser, deleteUser, approveUser, currentUser } = useApp();
+  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'PENDING' | 'DOCS'>('MEMBERS');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   
@@ -57,9 +57,11 @@ const AdminPanel: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editAvatar, setEditAvatar] = useState('');
 
+  const pendingUsers = users.filter(u => u.status === UserStatus.PENDING);
+  const activeUsers = users.filter(u => u.status === UserStatus.APPROVED);
+
   const getSafeAvatar = (avatar: any) => {
     if (!avatar || typeof avatar !== 'string') return '👤';
-    // Robust check: if it looks like a URL segment or is too long, fallback
     if (avatar.length > 8 || avatar.includes('/') || avatar.includes('.') || avatar.includes('?')) {
       return '👤';
     }
@@ -100,6 +102,14 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleApprove = async (id: string) => {
+    try {
+      await approveUser(id);
+    } catch (e) {
+      alert("Failed to approve user.");
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in transition-colors">
       {isPickerOpen && (
@@ -114,16 +124,25 @@ const AdminPanel: React.FC = () => {
         <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">System governance and user management.</p>
       </div>
 
-      <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl transition-colors">
+      <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl transition-colors overflow-x-auto no-scrollbar">
         <button 
           onClick={() => setActiveTab('MEMBERS')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'MEMBERS' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+          className={`flex-1 py-2.5 px-4 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'MEMBERS' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
-          <History size={14} /> MEMBERS ({users.length})
+          <History size={14} /> ACTIVE ({activeUsers.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('PENDING')}
+          className={`flex-1 py-2.5 px-4 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 relative whitespace-nowrap ${activeTab === 'PENDING' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+        >
+          <UserPlus size={14} /> REQUESTS ({pendingUsers.length})
+          {pendingUsers.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-900" />
+          )}
         </button>
         <button 
           onClick={() => setActiveTab('DOCS')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'DOCS' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+          className={`flex-1 py-2.5 px-4 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'DOCS' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           <BookOpen size={14} /> SYSTEM GUIDE
         </button>
@@ -139,7 +158,7 @@ const AdminPanel: React.FC = () => {
             
             <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
               <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                {users.map(user => (
+                {activeUsers.map(user => (
                   <div key={user.id} className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-800 shrink-0 shadow-sm overflow-hidden">
@@ -226,6 +245,56 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'PENDING' && (
+          <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <UserPlus size={16} className="text-amber-500" />
+              <h3 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em]">Pending Approval</h3>
+            </div>
+            
+            <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+               {pendingUsers.length === 0 ? (
+                 <div className="py-20 text-center opacity-40">
+                    <ShieldCheck size={48} className="mx-auto text-slate-200 mb-4" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No pending join requests.</p>
+                 </div>
+               ) : (
+                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                   {pendingUsers.map(user => (
+                     <div key={user.id} className="px-6 py-5 flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-full border border-slate-100 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-800 shrink-0">
+                            <span className="text-xl">{getSafeAvatar(user.avatar)}</span>
+                          </div>
+                          <div className="truncate flex-1">
+                            <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase truncate leading-tight">{user.name}</h5>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase mt-0.5 truncate">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                           <button 
+                             onClick={() => handleApprove(user.id)}
+                             className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-100 dark:shadow-none hover:bg-emerald-700 transition-all active:scale-90"
+                             title="Approve Member"
+                           >
+                             <CheckCircle size={18} />
+                           </button>
+                           <button 
+                             onClick={() => handleDeleteUser(user.id, user.name)}
+                             className="p-2.5 bg-slate-100 dark:bg-slate-800 text-rose-500 rounded-xl hover:bg-rose-50 transition-all active:scale-90"
+                             title="Reject Member"
+                           >
+                             <XCircle size={18} />
+                           </button>
+                        </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'DOCS' && (
           <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
             <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
@@ -238,7 +307,7 @@ const AdminPanel: React.FC = () => {
               <ul className="space-y-4">
                 <li className="flex gap-4">
                   <span className="w-6 h-6 rounded-full bg-slate-800 dark:bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">1</span>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Registration: All authorized members can sign up instantly with email or Google.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Registration: New signups are set to "Pending" and must be approved by an Admin to join the circle and view fund details.</p>
                 </li>
                 <li className="flex gap-4">
                   <span className="w-6 h-6 rounded-full bg-slate-800 dark:bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">2</span>

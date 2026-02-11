@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './state';
-import { UserRole } from './types';
+import { UserRole, UserStatus } from './types';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Deposits from './components/Deposits';
@@ -8,7 +8,7 @@ import Loans from './components/Loans';
 import Profile from './components/Profile';
 import AdminPanel from './components/AdminPanel';
 import Circle from './components/Circle';
-import { Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink, LogOut, Clock, ShieldCheck } from 'lucide-react';
 
 const AuthScreen: React.FC = () => {
   const { loginWithGoogle, loginWithEmail, signupWithEmail } = useApp();
@@ -209,6 +209,47 @@ const AuthScreen: React.FC = () => {
   );
 };
 
+const PendingScreen: React.FC = () => {
+  const { logout, currentUser } = useApp();
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 text-center animate-in fade-in duration-700">
+      <div className="bg-white dark:bg-slate-900 p-10 rounded-[48px] shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-sm flex flex-col items-center">
+         <div className="w-24 h-24 bg-amber-50 dark:bg-amber-950/30 rounded-full flex items-center justify-center mb-8">
+            <Clock size={48} className="text-amber-500 animate-pulse" />
+         </div>
+         <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Access Pending</h2>
+         <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold mt-2 mb-8 uppercase tracking-[0.2em]">Our Admin is reviewing your request.</p>
+         
+         <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl w-full mb-8 border border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-3 mb-2">
+               <span className="text-2xl">{currentUser?.avatar}</span>
+               <div className="text-left overflow-hidden">
+                  <p className="text-[10px] font-black text-slate-800 dark:text-slate-100 uppercase truncate">{currentUser?.name}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{currentUser?.email}</p>
+               </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4 px-3 py-1.5 bg-white dark:bg-slate-900 rounded-full border border-slate-100 dark:border-slate-800 w-fit">
+               <ShieldCheck size={10} className="text-amber-500" />
+               <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Verification Status: PENDING</span>
+            </div>
+         </div>
+
+         <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-8">
+            For security, new members must be authorized before joining the fund circle. We'll verify your identity shortly.
+         </p>
+
+         <button 
+           onClick={() => logout()}
+           className="w-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase tracking-[0.15em] text-[10px] hover:bg-slate-200 dark:hover:bg-slate-750 transition-all"
+         >
+           <LogOut size={16} /> Sign Out
+         </button>
+      </div>
+    </div>
+  );
+};
+
 const MainApp: React.FC = () => {
   const { currentUser, loading } = useApp();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -220,6 +261,8 @@ const MainApp: React.FC = () => {
   );
 
   if (!currentUser) return <AuthScreen />;
+  
+  if (currentUser.status === UserStatus.PENDING) return <PendingScreen />;
 
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>

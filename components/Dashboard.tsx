@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { getFinancialInsight } from '../services/gemini';
+import { UserStatus } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp, TrendingDown, Sparkles, Wallet, Landmark, Users } from 'lucide-react';
 
@@ -8,6 +9,8 @@ const Dashboard: React.FC = () => {
   const { summary, users } = useApp();
   const [insight, setInsight] = useState<string>('CLICK ANALYZE FOR REAL-TIME FINANCIAL HEALTH AUDIT...');
   const [loadingInsight, setLoadingInsight] = useState(false);
+
+  const approvedUsers = users.filter(u => u.status === UserStatus.APPROVED);
 
   const handleAnalyze = async () => {
     setLoadingInsight(true);
@@ -73,8 +76,8 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="flex gap-6 items-center">
           <div className="text-center border-r border-white/10 pr-6">
-            <p className="text-[8px] text-slate-500 font-black uppercase mb-1">Total Members</p>
-            <p className="text-lg font-black text-white">{users.length}</p>
+            <p className="text-[8px] text-slate-500 font-black uppercase mb-1">Circle Members</p>
+            <p className="text-lg font-black text-white">{approvedUsers.length}</p>
           </div>
           <div className="text-center">
             <p className="text-[8px] text-amber-500 font-black uppercase mb-1">Waiver Total</p>

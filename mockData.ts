@@ -1,4 +1,4 @@
-import { User, UserRole, Deposit, Loan, LoanStatus, DevProfile } from './types';
+import { User, UserRole, UserStatus, Deposit, Loan, LoanStatus, DevProfile } from './types';
 
 export const SEED_USERS: User[] = [
   {
@@ -6,6 +6,7 @@ export const SEED_USERS: User[] = [
     name: 'Admin Manager',
     email: 'admin@funters.com',
     role: UserRole.ADMIN,
+    status: UserStatus.APPROVED,
     avatar: '👑',
     joinedAt: '2023-01-01',
     contact: '+92 300 1234567'
@@ -15,6 +16,7 @@ export const SEED_USERS: User[] = [
     name: 'Ahmed Khan',
     email: 'ahmed@funters.com',
     role: UserRole.MEMBER,
+    status: UserStatus.APPROVED,
     avatar: '🧔',
     joinedAt: '2023-02-15',
     contact: '+92 321 7654321'
@@ -24,6 +26,7 @@ export const SEED_USERS: User[] = [
     name: 'Sara Ali',
     email: 'sara@funters.com',
     role: UserRole.MEMBER,
+    status: UserStatus.APPROVED,
     avatar: '👩',
     joinedAt: '2024-05-10'
   }

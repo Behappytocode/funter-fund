@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Deposit, Loan, FinancialSummary, UserRole, DevProfile, LoanStatus, Installment } from './types';
+import { User, Deposit, Loan, FinancialSummary, UserRole, UserStatus, DevProfile, LoanStatus, Installment } from './types';
 import { auth, db, googleProvider } from './firebase';
 import { 
   signInWithPopup, 
@@ -68,6 +68,7 @@ interface AppState {
   payInstallment: (loanId: string, installmentId: string) => Promise<void>;
   updateUser: (uid: string, data: Partial<User>) => Promise<void>;
   deleteUser: (uid: string) => Promise<void>;
+  approveUser: (uid: string) => Promise<void>;
   updateDevProfile: (data: Partial<DevProfile>) => Promise<void>;
 }
 
@@ -112,6 +113,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: firebaseUser.displayName || 'New Member',
             email: firebaseUser.email || '',
             role: UserRole.MEMBER,
+            status: UserStatus.PENDING,
             avatar: randomEmoji,
             joinedAt: new Date().toISOString().split('T')[0]
           };
@@ -208,6 +210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         name,
         email,
         role,
+        status: UserStatus.PENDING,
         avatar: randomEmoji,
         joinedAt: new Date().toISOString().split('T')[0]
       };
@@ -307,6 +310,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await deleteDoc(doc(db, 'users', uid));
   };
 
+  const approveUser = async (uid: string) => {
+    await updateDoc(doc(db, 'users', uid), {
+      status: UserStatus.APPROVED
+    });
+  };
+
   const updateDevProfile = async (data: Partial<DevProfile>) => {
     const devRef = doc(db, 'settings', 'devProfile');
     await setDoc(devRef, { ...devProfile, ...data }, { merge: true });
@@ -316,7 +325,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       currentUser, users, deposits, loans, devProfile, summary, loading, theme, toggleTheme,
       loginWithGoogle, loginWithEmail, signupWithEmail, logout,
-      addDeposit, deleteDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, deleteUser, updateDevProfile
+      addDeposit, deleteDeposit, issueLoan, approveLoan, rejectLoan, payInstallment, updateUser, deleteUser, approveUser, updateDevProfile
     }}>
       {children}
     </AppContext.Provider>

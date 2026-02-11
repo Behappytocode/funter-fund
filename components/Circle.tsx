@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useApp } from '../state';
 import { Search, Users, Calendar, ShieldCheck, User as UserIcon } from 'lucide-react';
-import { UserRole } from '../types';
+import { UserRole, UserStatus } from '../types';
 
 const Circle: React.FC = () => {
   const { users } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredUsers = users.filter(user => 
+  const approvedUsers = users.filter(u => u.status === UserStatus.APPROVED);
+
+  const filteredUsers = approvedUsers.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -101,12 +103,12 @@ const Circle: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/10 p-4 rounded-2xl">
-            <p className="text-[8px] font-black text-indigo-200 uppercase mb-1">Total Members</p>
-            <p className="text-xl font-black">{users.length}</p>
+            <p className="text-[8px] font-black text-indigo-200 uppercase mb-1">Active Members</p>
+            <p className="text-xl font-black">{approvedUsers.length}</p>
           </div>
           <div className="bg-white/10 p-4 rounded-2xl">
             <p className="text-[8px] font-black text-indigo-200 uppercase mb-1">Admin Count</p>
-            <p className="text-xl font-black">{users.filter(u => u.role === UserRole.ADMIN).length}</p>
+            <p className="text-xl font-black">{approvedUsers.filter(u => u.role === UserRole.ADMIN).length}</p>
           </div>
         </div>
       </div>
