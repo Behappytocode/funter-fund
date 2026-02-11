@@ -139,7 +139,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!currentUser || !auth.currentUser) return;
 
-    // Users listener: Members can often only read themselves if rules are strict. 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const usersList = snap.docs.map(d => d.data() as User);
       setUsers(usersList);
@@ -147,7 +146,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedSelf) setCurrentUser(updatedSelf);
     }, (err) => console.warn("Users listener restricted:", err.message));
 
-    // Deposits listener: If Member, only listen to own deposits
     const depositsBaseQuery = collection(db, 'deposits');
     const depositsFilteredQuery = currentUser.role === UserRole.ADMIN 
       ? query(depositsBaseQuery, orderBy('paymentDate', 'desc'))
@@ -157,7 +155,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDeposits(snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit)));
     }, (err) => console.warn("Deposits listener restricted:", err.message));
 
-    // Loans listener: If Member, only listen to own loans
     const loansBaseQuery = collection(db, 'loans');
     const loansFilteredQuery = currentUser.role === UserRole.ADMIN 
       ? loansBaseQuery
@@ -167,14 +164,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
     }, (err) => console.warn("Loans listener restricted:", err.message));
 
-    // Feedback listener: Filter by threadId (which is the member's ID)
+    // FEEDBACK FIX: Use a simpler query for members to avoid composite index requirements
     const feedbackBaseQuery = collection(db, 'feedback');
     const feedbackFilteredQuery = currentUser.role === UserRole.ADMIN
       ? query(feedbackBaseQuery, orderBy('timestamp', 'asc'))
-      : query(feedbackBaseQuery, where('threadId', '==', currentUser.id), orderBy('timestamp', 'asc'));
+      : query(feedbackBaseQuery, where('threadId', '==', currentUser.id)); // Order locally for members
 
     const unsubFeedback = onSnapshot(feedbackFilteredQuery, (snap) => {
-      setFeedbackMessages(snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage)));
+      const messages = snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage));
+      // Sort locally if it was a member query
+      if (currentUser.role !== UserRole.ADMIN) {
+        messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      }
+      setFeedbackMessages(messages);
     }, (err) => console.warn("Feedback listener restricted:", err.message));
 
     const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {

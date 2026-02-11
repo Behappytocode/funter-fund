@@ -50,10 +50,16 @@ const Feedback: React.FC = () => {
     return avatar.length > 7 ? '👤' : avatar;
   };
 
-  // Group messages for Admin view or filter for Member view
-  const currentThreadMessages = feedbackMessages.filter(m => 
-    currentUser?.role === UserRole.ADMIN ? m.threadId === selectedThreadId : m.threadId === currentUser?.id
-  );
+  // Logic to determine which messages to show
+  // Members only see messages where threadId matches their own ID
+  // Admins only see messages for the currently selected thread
+  const currentThreadMessages = feedbackMessages.filter(m => {
+    if (currentUser?.role === UserRole.ADMIN) {
+      return m.threadId === selectedThreadId;
+    } else {
+      return m.threadId === currentUser?.id;
+    }
+  });
 
   // For Admin view: Get list of unique threads (one for each member who has sent feedback)
   const threads = Array.from(new Set(feedbackMessages.map(m => m.threadId))).map(threadId => {
@@ -123,10 +129,10 @@ const Feedback: React.FC = () => {
           </button>
         )}
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight transition-colors">
             {currentUser?.role === UserRole.ADMIN ? 'Member Support' : 'Support Desk'}
           </h2>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">
+          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium transition-colors">
             {currentUser?.role === UserRole.ADMIN 
               ? `Chatting with ${users.find(u => u.id === selectedThreadId)?.name}` 
               : 'Direct line to our administration team.'}
@@ -149,7 +155,7 @@ const Feedback: React.FC = () => {
         {currentThreadMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full opacity-30 grayscale">
             <MessageSquare size={48} className="text-slate-300 dark:text-slate-600 mb-4" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Start the conversation</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Start the conversation</p>
           </div>
         ) : (
           currentThreadMessages.map((msg) => {
@@ -162,10 +168,10 @@ const Feedback: React.FC = () => {
                 <div className={`flex items-end gap-2 max-w-[85%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                   {!isMe && (
                     <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-50 dark:border-slate-700 overflow-hidden shadow-sm">
-                      <span className="text-sm">{getSafeAvatar(msg.senderAvatar)}</span>
+                      <span className="text-sm select-none pointer-events-none">{getSafeAvatar(msg.senderAvatar)}</span>
                     </div>
                   )}
-                  <div className={`p-4 rounded-[24px] sm:rounded-[28px] text-[11px] font-medium leading-relaxed shadow-sm ${
+                  <div className={`p-4 rounded-[24px] sm:rounded-[28px] text-[11px] font-medium leading-relaxed shadow-sm transition-colors ${
                     isMe 
                       ? 'bg-indigo-600 text-white rounded-br-lg' 
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-bl-lg border border-slate-100 dark:border-slate-800'
@@ -191,7 +197,7 @@ const Feedback: React.FC = () => {
           <input 
             type="text" 
             placeholder="Type your message..." 
-            className="flex-1 bg-transparent border-none outline-none px-5 py-3 text-xs font-medium dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+            className="flex-1 bg-transparent border-none outline-none px-5 py-3 text-xs font-medium dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600 transition-colors"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={isSending}
