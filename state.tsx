@@ -139,47 +139,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!currentUser || !auth.currentUser) return;
 
-    // 1. Members Directory - Global for Circle
+    // 1. Members Directory
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const usersList = snap.docs.map(d => d.data() as User);
       setUsers(usersList);
       const updatedSelf = usersList.find(u => u.id === currentUser.id);
       if (updatedSelf) setCurrentUser(updatedSelf);
-    }, (err) => console.warn("Users listener restricted:", err.message));
+    }, (err) => console.error("Users listener error:", err.message));
 
-    // 2. Deposits - Global for Summary/Transparency
-    const depositsBaseQuery = collection(db, 'deposits');
-    const depositsAllQuery = query(depositsBaseQuery, orderBy('paymentDate', 'desc'));
-    const unsubDeposits = onSnapshot(depositsAllQuery, (snap) => {
-      setDeposits(snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit)));
-    }, (err) => console.warn("Deposits listener restricted:", err.message));
+    // 2. Deposits - GLOBAL transparency. We fetch the raw collection and sort client-side
+    // to avoid needing a Composite Index in Firebase.
+    const unsubDeposits = onSnapshot(collection(db, 'deposits'), (snap) => {
+      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit));
+      // Client-side sort: newest first
+      data.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+      setDeposits(data);
+    }, (err) => console.error("Deposits listener error:", err.message));
 
-    // 3. Loans - Global for Summary/Transparency
-    const loansBaseQuery = collection(db, 'loans');
-    const unsubLoans = onSnapshot(loansBaseQuery, (snap) => {
-      setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
-    }, (err) => console.warn("Loans listener restricted:", err.message));
+    // 3. Loans - GLOBAL transparency.
+    const unsubLoans = onSnapshot(collection(db, 'loans'), (snap) => {
+      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan));
+      // Client-side sort if needed, though status groups them usually
+      setLoans(data);
+    }, (err) => console.error("Loans listener error:", err.message));
 
     // 4. Feedback - Private per member (ThreadId matches MemberId)
     const feedbackBaseQuery = collection(db, 'feedback');
     const feedbackFilteredQuery = currentUser.role === UserRole.ADMIN
-      ? query(feedbackBaseQuery, orderBy('timestamp', 'asc'))
+      ? feedbackBaseQuery // Admins see everything
       : query(feedbackBaseQuery, where('threadId', '==', currentUser.id));
 
     const unsubFeedback = onSnapshot(feedbackFilteredQuery, (snap) => {
       const messages = snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage));
-      if (currentUser.role !== UserRole.ADMIN) {
-        messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-      }
+      // Always sort feedback by timestamp ascending for correct chat flow
+      messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       setFeedbackMessages(messages);
-    }, (err) => console.warn("Feedback listener restricted:", err.message));
+    }, (err) => console.error("Feedback listener error:", err.message));
 
     // 5. System Settings
     const unsubDev = onSnapshot(doc(db, 'settings', 'devProfile'), (docSnap) => {
       if (docSnap.exists()) {
         setDevProfile(docSnap.data() as DevProfile);
       }
-    }, (err) => console.warn("Settings listener restricted:", err.message));
+    }, (err) => console.error("Settings listener error:", err.message));
 
     return () => {
       unsubUsers();
