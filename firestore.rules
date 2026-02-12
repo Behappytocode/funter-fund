@@ -16,12 +16,15 @@ service cloud.firestore {
     }
 
     match /deposits/{depositId} {
+      // Communal read access for transparency
       allow read: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
     match /loans/{loanId} {
+      // Communal read access for transparency
       allow read: if isSignedIn();
+      // Members can create PENDING requests for themselves
       allow create: if isAdmin() || (
         isSignedIn() && 
         request.resource.data.memberId == request.auth.uid && 
@@ -31,6 +34,7 @@ service cloud.firestore {
     }
 
     match /feedback/{msgId} {
+      // Private thread access
       allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.threadId == request.auth.uid));
       allow create: if isSignedIn() && (request.resource.data.threadId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
