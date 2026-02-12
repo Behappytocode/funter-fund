@@ -27,7 +27,8 @@ const Loans: React.FC = () => {
 
   const activeLoanData = loans.find(l => l.id === selectedLoan);
 
-  const filteredLoans = (currentUser?.role === UserRole.ADMIN ? loans : loans.filter(l => l.memberId === currentUser?.id))
+  // FIX: All members see all loans now. CONDITIONAL FILTER REMOVED.
+  const filteredLoans = loans
     .filter(l => {
       if (activeTab === 'ACTIVE') return l.status === LoanStatus.ACTIVE;
       if (activeTab === 'COMPLETED') return l.status === LoanStatus.COMPLETED;
@@ -272,7 +273,7 @@ const Loans: React.FC = () => {
             </div>
           </div>
         ))}
-        {filteredLoans.length === 0 && (activeTab !== 'REQUESTS' || currentUser?.role === UserRole.ADMIN) && (
+        {filteredLoans.length === 0 && (
           <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-[40px] border border-dashed border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center grayscale opacity-40">
             <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                <Landmark size={32} className="text-slate-300 dark:text-slate-700" />
@@ -386,7 +387,7 @@ const Loans: React.FC = () => {
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
+                className="w-full bg-indigo-600 text-white font-black py-4 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs disabled:opacity-50 mt-4"
               >
                 {isSubmitting ? 'Processing...' : currentUser?.role === UserRole.ADMIN ? 'Approve & Issue' : 'Submit Loan Request'}
               </button>
@@ -436,7 +437,7 @@ const Loans: React.FC = () => {
                         )}
                       </div>
                       
-                      {/* Admin Installment Payment Button */}
+                      {/* Admin Installment Payment Button - Guarded */}
                       {currentUser?.role === UserRole.ADMIN && activeLoanData.status === LoanStatus.ACTIVE && inst.status === 'PENDING' && (
                         <button 
                           onClick={() => handlePayInstallment(activeLoanData.id, inst.id)}

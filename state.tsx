@@ -146,21 +146,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedSelf) setCurrentUser(updatedSelf);
     }, (err) => console.warn("Users listener restricted:", err.message));
 
+    // Global Deposits for all members to see financial summary
     const depositsBaseQuery = collection(db, 'deposits');
-    const depositsFilteredQuery = currentUser.role === UserRole.ADMIN 
-      ? query(depositsBaseQuery, orderBy('paymentDate', 'desc'))
-      : query(depositsBaseQuery, where('memberId', '==', currentUser.id), orderBy('paymentDate', 'desc'));
+    const depositsAllQuery = query(depositsBaseQuery, orderBy('paymentDate', 'desc'));
 
-    const unsubDeposits = onSnapshot(depositsFilteredQuery, (snap) => {
+    const unsubDeposits = onSnapshot(depositsAllQuery, (snap) => {
       setDeposits(snap.docs.map(d => ({ ...d.data(), id: d.id } as Deposit)));
     }, (err) => console.warn("Deposits listener restricted:", err.message));
 
+    // Global Loans for all members to see communal tracking
     const loansBaseQuery = collection(db, 'loans');
-    const loansFilteredQuery = currentUser.role === UserRole.ADMIN 
-      ? loansBaseQuery
-      : query(loansBaseQuery, where('memberId', '==', currentUser.id));
-
-    const unsubLoans = onSnapshot(loansFilteredQuery, (snap) => {
+    const unsubLoans = onSnapshot(loansBaseQuery, (snap) => {
       setLoans(snap.docs.map(d => ({ ...d.data(), id: d.id } as Loan)));
     }, (err) => console.warn("Loans listener restricted:", err.message));
 
@@ -168,11 +164,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const feedbackBaseQuery = collection(db, 'feedback');
     const feedbackFilteredQuery = currentUser.role === UserRole.ADMIN
       ? query(feedbackBaseQuery, orderBy('timestamp', 'asc'))
-      : query(feedbackBaseQuery, where('threadId', '==', currentUser.id)); // Order locally for members
+      : query(feedbackBaseQuery, where('threadId', '==', currentUser.id)); // Private for members
 
     const unsubFeedback = onSnapshot(feedbackFilteredQuery, (snap) => {
       const messages = snap.docs.map(d => ({ ...d.data(), id: d.id } as FeedbackMessage));
-      // Sort locally if it was a member query
       if (currentUser.role !== UserRole.ADMIN) {
         messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       }

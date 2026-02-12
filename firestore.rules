@@ -16,12 +16,12 @@ service cloud.firestore {
     }
 
     match /deposits/{depositId} {
-      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.memberId == request.auth.uid));
+      allow read: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
     match /loans/{loanId} {
-      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.memberId == request.auth.uid));
+      allow read: if isSignedIn();
       allow create: if isAdmin() || (
         isSignedIn() && 
         request.resource.data.memberId == request.auth.uid && 
