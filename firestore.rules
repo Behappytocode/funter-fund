@@ -20,12 +20,14 @@ service cloud.firestore {
     }
 
     // Deposits Collection: Communal transparency
+    // All signed-in members can read all deposits to see total balance and history.
     match /deposits/{depositId} {
       allow read: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
     // Loans Collection: Communal transparency
+    // All signed-in members can read all loans to see fund health.
     match /loans/{loanId} {
       allow read: if isSignedIn();
       // Members can create a PENDING loan request for themselves
