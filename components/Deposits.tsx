@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../state';
 import { UserRole } from '../types';
-import { Plus, Search, Camera, Eye, Landmark, Trash2, FileText, LayoutList, Users } from 'lucide-react';
+import { Plus, Search, Camera, Eye, Landmark, Trash2, FileText, LayoutList, Users, TrendingUp, Award, UserCheck } from 'lucide-react';
 
 const Deposits: React.FC = () => {
-  const { deposits, currentUser, users, addDeposit, deleteDeposit } = useApp();
+  const { deposits, currentUser, users, addDeposit, deleteDeposit, summary } = useApp();
   const [activeTab, setActiveTab] = useState<'HISTORY' | 'SUMMARIES'>('HISTORY');
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,21 +16,34 @@ const Deposits: React.FC = () => {
 
   // Calculate Member-wise Summaries
   const memberSummaries = useMemo(() => {
-    const summaryMap = new Map<string, { memberName: string, total: number, count: number, memberId: string }>();
+    const summaryMap = new Map<string, { memberName: string, total: number, count: number, memberId: string, avatar?: string }>();
     
+    // Initialize with all approved users to show even those with 0 deposits
+    users.forEach(u => {
+      if (u.status === 'APPROVED') {
+        summaryMap.set(u.id, { memberName: u.name, total: 0, count: 0, memberId: u.id, avatar: u.avatar });
+      }
+    });
+
     deposits.forEach(d => {
-      const existing = summaryMap.get(d.memberId) || { memberName: d.memberName, total: 0, count: 0, memberId: d.memberId };
-      summaryMap.set(d.memberId, {
-        ...existing,
-        total: existing.total + d.amount,
-        count: existing.count + 1
-      });
+      const existing = summaryMap.get(d.memberId);
+      if (existing) {
+        summaryMap.set(d.memberId, {
+          ...existing,
+          total: existing.total + d.amount,
+          count: existing.count + 1
+        });
+      }
     });
 
     return Array.from(summaryMap.values())
       .filter(s => s.memberName.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => b.total - a.total);
-  }, [deposits, searchTerm]);
+  }, [deposits, users, searchTerm]);
+
+  const mySummary = useMemo(() => {
+    return memberSummaries.find(s => s.memberId === currentUser?.id);
+  }, [memberSummaries, currentUser]);
 
   const filteredDeposits = deposits.filter(d => 
     d.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,8 +84,13 @@ const Deposits: React.FC = () => {
     setNotes('');
   };
 
+  const getSafeAvatar = (avatar: string | undefined) => {
+    if (!avatar) return '👤';
+    return avatar.length > 7 ? '👤' : avatar;
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Contributions</h2>
@@ -84,7 +102,7 @@ const Deposits: React.FC = () => {
             className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 transition-transform"
           >
             <Plus size={18} />
-            <span className="text-xs tracking-tight">Log Payment</span>
+            <span className="text-xs tracking-tight uppercase">Log Payment</span>
           </button>
         )}
       </div>
@@ -93,19 +111,39 @@ const Deposits: React.FC = () => {
       <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl transition-colors">
         <button 
           onClick={() => setActiveTab('HISTORY')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'HISTORY' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+          className={`flex-1 py-3 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'HISTORY' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           <LayoutList size={14} />
           HISTORY
         </button>
         <button 
           onClick={() => setActiveTab('SUMMARIES')}
-          className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'SUMMARIES' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
+          className={`flex-1 py-3 text-[10px] font-black rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'SUMMARIES' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
         >
           <Users size={14} />
           MEMBER WISE
         </button>
       </div>
+
+      {activeTab === 'SUMMARIES' && mySummary && (
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-[32px] text-white shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden group">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <UserCheck size={14} className="text-indigo-200" />
+                <p className="text-[9px] font-black uppercase tracking-widest text-indigo-100">Your Portfolio Standing</p>
+              </div>
+              <h3 className="text-xl font-black italic">Rs. {mySummary.total.toLocaleString()}</h3>
+              <p className="text-[10px] font-bold text-indigo-100/70 mt-1">{mySummary.count} Contributions Totaled</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-black uppercase tracking-widest text-indigo-200 mb-1">Fund Share</p>
+              <p className="text-lg font-black">{summary.totalDeposits > 0 ? Math.round((mySummary.total / summary.totalDeposits) * 100) : 0}%</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-indigo-500 transition-colors" size={18} />
@@ -140,9 +178,6 @@ const Deposits: React.FC = () => {
                       <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
                       <span className="text-[9px] font-black text-emerald-500 dark:text-emerald-400 uppercase">Verified</span>
                     </div>
-                    {d.notes && (
-                      <p className="text-[8px] text-slate-400 dark:text-slate-500 italic mt-1 truncate">{d.notes}</p>
-                    )}
                   </div>
                 </div>
                 <div className="text-center">
@@ -173,20 +208,44 @@ const Deposits: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {memberSummaries.map((s) => (
-            <div key={s.memberId} className="bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between group hover:border-indigo-100 dark:hover:border-indigo-900 transition-all">
+          <div className="px-2 mb-2 flex items-center justify-between">
+            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+              <TrendingUp size={12} className="text-indigo-400" />
+              Contribution Leaderboard
+            </h3>
+            <span className="text-[8px] font-black text-slate-300 dark:text-slate-600 uppercase">Communal Transparency</span>
+          </div>
+          {memberSummaries.map((s, idx) => (
+            <div 
+              key={s.memberId} 
+              className={`bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between group transition-all hover:border-indigo-100 dark:hover:border-indigo-900 ${s.memberId === currentUser?.id ? 'ring-2 ring-indigo-600 dark:ring-indigo-500 ring-offset-4 ring-offset-slate-50 dark:ring-offset-slate-950' : ''}`}
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/30 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-lg uppercase transition-colors">
-                  {s.memberName.charAt(0)}
+                <div className="relative">
+                  <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-800 dark:text-slate-200 font-black text-lg uppercase transition-colors overflow-hidden border border-slate-100 dark:border-slate-700">
+                    {getSafeAvatar(s.avatar) === '👤' ? s.memberName.charAt(0) : getSafeAvatar(s.avatar)}
+                  </div>
+                  {idx < 3 && (
+                    <div className="absolute -top-2 -left-2 bg-amber-500 text-white p-1 rounded-full shadow-lg">
+                      <Award size={10} />
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{s.memberName}</h4>
-                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">{s.count} CONTRIBUTIONS</p>
+                  <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight flex items-center gap-2">
+                    {s.memberName}
+                    {s.memberId === currentUser?.id && (
+                      <span className="text-[7px] bg-indigo-600 text-white px-1.5 py-0.5 rounded-full font-black tracking-tighter uppercase">Me</span>
+                    )}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{s.count} CONTRIBUTIONS</span>
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Total Deposit</p>
-                <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 italic">Rs. {s.total.toLocaleString()}</p>
+                <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Total Stake</p>
+                <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 italic">Rs. {s.total.toLocaleString()}</p>
               </div>
             </div>
           ))}
@@ -205,9 +264,9 @@ const Deposits: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] overflow-hidden shadow-2xl slide-in-from-bottom duration-300 transition-colors">
             <div className="bg-indigo-600 p-8 text-white relative">
-              <h3 className="text-xl font-black">Record Contribution</h3>
+              <h3 className="text-xl font-black italic uppercase tracking-tighter">Record Contribution</h3>
               <p className="text-indigo-100 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-70">Log monthly payment details</p>
-              <button onClick={() => setIsAdding(false)} className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setIsAdding(false)} className="absolute top-8 right-8 text-white/70 hover:text-white transition-colors p-2">✕</button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div>
@@ -247,28 +306,9 @@ const Deposits: React.FC = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Entry Description</label>
-                <div className="relative">
-                  <FileText className="absolute left-4 top-4 text-slate-300 dark:text-slate-600" size={16} />
-                  <textarea 
-                    className="w-full pl-11 pr-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 dark:text-slate-200 transition-colors h-24 resize-none"
-                    placeholder="e.g. Monthly contribution for Feb 2024"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Mandatory Receipt</label>
-                <div className="border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-800 transition-all">
-                  <Camera size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest mt-2">Upload receipt image</span>
-                </div>
-              </div>
               <button 
                 type="submit"
-                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                className="w-full bg-indigo-600 text-white font-black py-5 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all uppercase tracking-widest text-xs mt-4"
               >
                 Log Entry
               </button>
