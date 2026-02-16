@@ -246,6 +246,11 @@ const Deposits: React.FC = () => {
               <div className="text-right">
                 <p className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Total Stake</p>
                 <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 italic">Rs. {s.total.toLocaleString()}</p>
+                <div className="mt-1 flex items-center justify-end gap-1.5">
+                  <div className="text-[8px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                    {summary.totalDeposits > 0 ? Math.round((s.total / summary.totalDeposits) * 100) : 0}% SHARE
+                  </div>
+                </div>
               </div>
             </div>
           ))}
