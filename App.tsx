@@ -40,13 +40,13 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const handleAuth = async () => {
+  const handleGoogleAuth = async () => {
     setLoading(true);
     setError('');
     try {
-      await loginWith();
+      await loginWithGoogle();
     } catch (err: any) {
-      setError(err.message || ' authentication failed');
+      setError(err.message || 'Google authentication failed');
     } finally {
       setLoading(false);
     }
@@ -152,12 +152,12 @@ const AuthScreen: React.FC = () => {
 
             <button 
               type="button"
-              onClick={handleAuth}
+              onClick={handleGoogleAuth}
               disabled={loading}
               className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black py-4 rounded-[22px] shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/.svg" className="w-5 h-5" alt="" />
-              <span className="text-xs uppercase tracking-widest">google</span>
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+              <span className="text-xs uppercase tracking-widest">Sign with Google</span>
             </button>
           </form>
 
