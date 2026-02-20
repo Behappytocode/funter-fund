@@ -13,7 +13,6 @@ import { Mail, Lock, User as UserIcon, Shield, AlertCircle, ExternalLink, LogOut
 
 const AuthScreen: React.FC = () => {
   const { loginWithGoogle, loginWithEmail, signupWithEmail } = useApp();
-  const [method, setMethod] = useState<'GOOGLE' | 'EMAIL'>('EMAIL');
   const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,113 +64,102 @@ const AuthScreen: React.FC = () => {
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-xl border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl mb-8">
-            <button 
-              onClick={() => { setMethod('EMAIL'); setError(''); }}
-              className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${method === 'EMAIL' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
-            >
-              EMAIL
-            </button>
-            <button 
-              onClick={() => { setMethod('GOOGLE'); setError(''); }}
-              className={`flex-1 py-2.5 text-[10px] font-black rounded-xl transition-all ${method === 'GOOGLE' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500 uppercase'}`}
-            >
-              GOOGLE
-            </button>
-          </div>
-
-          {method === 'GOOGLE' ? (
-            <div className="text-center">
-              <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">Google Access</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-2 mb-8">Quick and secure access via Google.</p>
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            <div className="flex gap-2 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl mb-2">
               <button 
-                onClick={handleGoogleAuth}
-                disabled={loading}
-                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black py-4 rounded-[22px] shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                type="button"
+                onClick={() => setMode('LOGIN')}
+                className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'LOGIN' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                {loading ? 'Connecting...' : 'Sign in with Google'}
+                SIGN IN
+              </button>
+              <button 
+                type="button"
+                onClick={() => setMode('SIGNUP')}
+                className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'SIGNUP' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500'}`}
+              >
+                SIGN UP
               </button>
             </div>
-          ) : (
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              <div className="flex gap-2 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl mb-2">
-                <button 
-                  type="button"
-                  onClick={() => setMode('LOGIN')}
-                  className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'LOGIN' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500'}`}
-                >
-                  SIGN IN
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setMode('SIGNUP')}
-                  className={`flex-1 py-2 text-[9px] font-black rounded-lg transition-all ${mode === 'SIGNUP' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400 dark:text-slate-500'}`}
-                >
-                  SIGN UP
-                </button>
-              </div>
 
-              {mode === 'SIGNUP' && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Full Name" 
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
-                    <select 
-                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none appearance-none dark:text-slate-200 transition-colors"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as UserRole)}
-                    >
-                      <option value={UserRole.MEMBER} className="dark:bg-slate-900">SIGNUP AS MEMBER</option>
-                      <option value={UserRole.ADMIN} className="dark:bg-slate-900">SIGNUP AS ADMIN</option>
-                    </select>
-                  </div>
+            {mode === 'SIGNUP' && (
+              <div className="space-y-4">
+                <div className="relative">
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Full Name" 
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
-              )}
-
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div className="relative">
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+                  <select 
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none appearance-none dark:text-slate-200 transition-colors"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
+                  >
+                    <option value={UserRole.MEMBER} className="dark:bg-slate-900">SIGNUP AS MEMBER</option>
+                    <option value={UserRole.ADMIN} className="dark:bg-slate-900">SIGNUP AS ADMIN</option>
+                  </select>
+                </div>
               </div>
+            )}
 
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+              <input 
+                type="email" 
+                placeholder="Email Address" 
+                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600" size={16} />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl text-xs font-black focus:ring-4 focus:ring-indigo-50 dark:focus:ring-indigo-900/20 outline-none dark:text-slate-200 transition-colors"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-indigo-600 text-white font-black py-4 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : mode === 'LOGIN' ? 'Sign In' : 'Sign Up'}
+            </button>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-100 dark:border-slate-800"></span>
               </div>
+              <div className="relative flex justify-center text-[8px] uppercase font-black">
+                <span className="bg-white dark:bg-slate-900 px-2 text-slate-400 dark:text-slate-600 tracking-widest">Or continue with</span>
+              </div>
+            </div>
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 text-white font-black py-4 rounded-[22px] shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
-              >
-                {loading ? 'Processing...' : mode === 'LOGIN' ? 'Sign In' : 'Sign Up'}
-              </button>
-            </form>
-          )}
+            <button 
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={loading}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black py-4 rounded-[22px] shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+              <span className="text-xs uppercase tracking-widest">Google</span>
+            </button>
+          </form>
 
           {error && (
             <div className={`mt-6 p-4 rounded-2xl flex flex-col gap-2 ${isDomainError ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30' : 'bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30'}`}>
